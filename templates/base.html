@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}公車追蹤系統{% endblock %}</title>
+    {# 子頁面要額外載入的 CSS 放這裡 #}
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{{ url_for('frontstage.index') }}">首頁</a>
+            <a href="{{ url_for('backstage.index') }}">後台</a>
+        </nav>
+    </header>
+
+    {# flash() 送出的提示訊息 #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, text in messages %}
+            <div class="flash {{ category }}">{{ text }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <main>
+        {# 子頁面的主要內容放這裡 #}
+        {% block content %}
+            <p>{{ message or '頁面建置中' }}</p>
+        {% endblock %}
+    </main>
+
+    <footer>
+        <small>2026 資料庫系統 專案一：公車追蹤系統</small>
+    </footer>
+
+    {# 子頁面要額外載入的 JavaScript 放這裡 #}
+    {% block scripts %}{% endblock %}
+</body>
+</html>
