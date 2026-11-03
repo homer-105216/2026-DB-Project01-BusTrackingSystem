@@ -1,0 +1,389 @@
+/* ====================================================
+   公車追蹤系統 (BusTrackingSystem) - 全域樣式表
+   ==================================================== */
+
+:root {
+    --primary: #1e40af;
+    --primary-hover: #1d4ed8;
+    --primary-light: #60a5fa;
+    --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    --accent: #f59e0b;
+    --accent-light: #fef3c7;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --dark: #0f172a;
+    --gray-bg: #f8fafc;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    --radius-lg: 16px;
+    --radius-md: 12px;
+}
+
+body {
+    font-family: 'Noto Sans TC', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: #1e293b;
+    background-color: var(--gray-bg);
+    overflow-x: hidden;
+}
+
+/* 漸層導航欄 */
+.bg-primary-gradient {
+    background: var(--primary-gradient);
+}
+
+.brand-icon-box {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+}
+
+.bg-white-trans {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+}
+
+.bg-white-trans::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.bg-white-trans:focus {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+}
+
+.btn-warning-soft {
+    background-color: #fbbf24;
+    color: #78350f;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-warning-soft:hover {
+    background-color: #f59e0b;
+    color: #451a03;
+}
+
+.btn-light-glass {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+}
+
+.btn-light-glass:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* 首頁 Hero 區域 */
+.hero-section {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+    border-radius: var(--radius-lg);
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    padding: 3.5rem 1.5rem;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.hero-search-wrapper {
+    max-width: 650px;
+    margin: 0 auto;
+}
+
+.hero-search-input {
+    height: 56px;
+    font-size: 1.1rem;
+    border-radius: 28px 0 0 28px;
+    padding-left: 1.5rem;
+}
+
+.hero-search-btn {
+    border-radius: 0 28px 28px 0;
+    padding-left: 1.8rem;
+    padding-right: 1.8rem;
+    font-size: 1.1rem;
+}
+
+/* 路線卡片 (Route Cards) */
+.route-card {
+    border: none;
+    border-radius: var(--radius-md);
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.route-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.route-number-badge {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.35rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 10px;
+    display: inline-block;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
+/* 路線分類標籤 */
+.badge-category {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+}
+
+.cat-trunk { background-color: #fee2e2; color: #991b1b; }
+.cat-mrt { background-color: #dbeafe; color: #1e40af; }
+.cat-city { background-color: #dcfce7; color: #166534; }
+.cat-sub { background-color: #fef3c7; color: #92400e; }
+
+/* 站點時間軸 (Stop Sequence Timeline) */
+.station-timeline {
+    position: relative;
+    padding-left: 28px;
+}
+
+.station-timeline::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 15px;
+    bottom: 15px;
+    width: 4px;
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.timeline-item:hover {
+    border-color: #93c5fd;
+    background-color: #f8fafc;
+}
+
+.timeline-item.active-bus {
+    border-color: #f59e0b;
+    background-color: #fffbeb;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid #64748b;
+    z-index: 2;
+    transition: all 0.2s ease;
+}
+
+.timeline-item:hover .timeline-dot {
+    border-color: #2563eb;
+    transform: translateY(-50%) scale(1.2);
+}
+
+.timeline-item.active-bus .timeline-dot {
+    background: #f59e0b;
+    border-color: #ffffff;
+    box-shadow: 0 0 0 3px #f59e0b;
+}
+
+/* 即時預估狀態 Badge */
+.status-pill {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    min-width: 85px;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-arriving {
+    background-color: #fee2e2;
+    color: #dc2626;
+    animation: pulseArrival 1.5s infinite;
+}
+
+.status-mins {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.status-not-departed {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+@keyframes pulseArrival {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.85; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 收藏按鈕 (Favorite Button) */
+.btn-fav {
+    border: none;
+    background: transparent;
+    padding: 0.35rem;
+    border-radius: 50%;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-fav:hover {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    transform: scale(1.15);
+}
+
+.btn-fav.active {
+    color: #f59e0b;
+}
+
+/* 地圖容器 */
+#bus-map {
+    height: 480px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--card-shadow);
+    border: 1px solid #e2e8f0;
+    z-index: 1;
+}
+
+/* 登入提示彈跳視窗圖示 */
+.auth-modal-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: #fef3c7;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-warning-soft {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+}
+
+/* 方向切換 Nav Tabs */
+.nav-pills-transit .nav-link {
+    color: #475569;
+    font-weight: 600;
+    border-radius: 30px;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.nav-pills-transit .nav-link.active {
+    background-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+/* 附近公車卡片 */
+.nearby-station-card {
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid #e2e8f0;
+    box-shadow: var(--card-shadow);
+    transition: all 0.2s ease;
+}
+
+.nearby-station-card:hover {
+    border-color: #93c5fd;
+    transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+/* 表格優化 */
+.table-transit th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.88rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table-transit td {
+    vertical-align: middle;
+    font-size: 0.92rem;
+}
+
+/* 浮動公車標記 (Leaflet bus marker style) */
+.leaflet-bus-icon {
+    background-color: #2563eb;
+    color: white;
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    font-weight: bold;
+}
+
+.leaflet-bus-icon.active {
+    background-color: #f59e0b;
+    animation: busPulse 2s infinite;
+}
+
+@keyframes busPulse {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}

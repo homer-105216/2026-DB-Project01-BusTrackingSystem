@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}會員註冊 - 高雄公車即時動態追蹤{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <!-- 註冊卡片 -->
+            <div class="bg-white p-4 p-md-5 rounded-4 shadow-sm">
+                <div class="text-center mb-4">
+                    <div class="brand-icon-box bg-success text-white mx-auto mb-3" style="width: 58px; height: 58px;">
+                        <i class="bi bi-person-plus-fill fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">新會員註冊</h3>
+                    <p class="text-secondary small">建立帳號以收藏常用路線、即時掌控到站資訊</p>
+                </div>
+
+                <form action="{{ url_for('frontstage.register') }}" method="POST" id="register-form" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">使用者名稱 (Username)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" id="reg-username" class="form-control" placeholder="請設定 3-20 字元名稱" required minlength="3" maxlength="20">
+                            <div class="invalid-feedback">使用者名稱長度需介於 3 至 20 個字元！</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">電子郵件 (Email)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="email" id="reg-email" class="form-control" placeholder="example@email.com" required>
+                            <div class="invalid-feedback">請輸入有效的電子郵件格式！</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">設定密碼</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" id="reg-password" class="form-control" placeholder="請設定 6 位以上密碼" required minlength="6">
+                            <div class="invalid-feedback">密碼長度需至少 6 個字元！</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark small">確認密碼</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-shield-check"></i></span>
+                            <input type="password" name="confirm_password" id="reg-confirm-password" class="form-control" placeholder="請再次輸入相同密碼" required minlength="6">
+                            <div class="invalid-feedback" id="confirm-pwd-feedback">兩次輸入的密碼不一致！</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-2 rounded-pill fw-bold shadow-sm mb-3">
+                        確認建立帳號
+                    </button>
+
+                    <div class="text-center small text-secondary">
+                        已經擁有帳號？
+                        <a href="{{ url_for('frontstage.login') }}" class="text-primary fw-bold text-decoration-none ms-1">
+                            直接登入
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
