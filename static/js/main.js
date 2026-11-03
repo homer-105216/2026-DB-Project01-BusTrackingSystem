@@ -86,7 +86,7 @@ async function toggleFavorite(type, id, btn) {
         const icon = btn.querySelector('i');
         const label = btn.querySelector('.fav-label');
         if (icon) {
-            icon.classList.remove('bi-star');
+            icon.classList.remove('bi-star', 'text-muted');
             icon.classList.add('bi-star-fill', 'text-warning');
         }
         if (label) label.innerText = '已收藏路線';
@@ -97,18 +97,22 @@ async function toggleFavorite(type, id, btn) {
         const label = btn.querySelector('.fav-label');
         if (icon) {
             icon.classList.remove('bi-star-fill', 'text-warning');
-            icon.classList.add('bi-star');
+            icon.classList.add('bi-star', 'text-muted');
         }
         if (label) label.innerText = '收藏路線';
         showToast(type === 'route' ? '已取消收藏路線' : '已取消收藏站點');
     }
 
-    // 嘗試通知後端 API (若後端尚未連接亦不會影響前端操作)
+    // 嘗試通知後端 API (更新 Session 或 資料庫)
     try {
-        await fetch(`/api/favorite/${type}/${id}`, {
+        const res = await fetch(`/api/favorite/${type}/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
+        const data = await res.json();
+        if (data && data.require_login) {
+            requireLoginPrompt(data.message, window.location.href);
+        }
     } catch (e) {
         // 純前端模式，忽略後端連線異常
     }
@@ -324,14 +328,14 @@ function useCurrentLocation() {
 }
 
 /**
- * 動態渲染附近站點卡片
+ * 動態渲染附近站點列表
  */
 function renderNearbyStations(stations) {
     const container = document.getElementById('nearby-stations-container');
     if (!container) return;
 
     if (stations.length === 0) {
-        container.innerHTML = '<div class="col-12 text-center text-muted py-4">附近暫無公車站點</div>';
+        container.innerHTML = '<div class="text-center text-muted py-3">附近暫無公車站牌</div>';
         return;
     }
 
@@ -340,42 +344,31 @@ function renderNearbyStations(stations) {
         let routesHtml = '';
         if (s.routes && s.routes.length > 0) {
             routesHtml = s.routes.map(r => `
-                <a href="/route/${r.routeId}" class="badge bg-primary text-decoration-none px-2 py-1 me-1 mb-1">
+                <a href="/route/${r.routeId}" class="badge bg-light text-dark border text-decoration-none">
                     ${r.routeName}
                 </a>
-            `).join('');
+            `).join(' ');
         } else {
             routesHtml = '<span class="text-muted small">暫無路線</span>';
         }
 
         html += `
-            <div class="col-md-6 col-lg-3">
-                <div class="nearby-station-card p-3 h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h6 class="fw-bold mb-0 text-dark">
-                                <i class="bi bi-geo-alt-fill text-danger me-1"></i>${s.sName}
-                            </h6>
-                            <span class="badge bg-light text-secondary border small">
-                                約 ${s.distanceKm} km
-                            </span>
-                        </div>
-                        <p class="text-secondary small mb-2 text-truncate" title="${s.address}">
-                            ${s.address || '高雄市交通幹道'}
-                        </p>
-                        <div class="mb-3">
-                            <div class="small fw-semibold text-muted mb-1">行經路線：</div>
-                            <div class="d-flex flex-wrap">${routesHtml}</div>
-                        </div>
+            <div class="list-group-item py-3 px-2 border-bottom">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div class="fw-bold text-dark">
+                        <i class="bi bi-pin-map-fill text-danger me-1"></i>${s.sName}
+                        ${s.distanceKm ? `<span class="badge bg-light text-secondary border small ms-1">約 ${s.distanceKm} km</span>` : ''}
                     </div>
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                        <button class="btn btn-sm btn-outline-warning btn-fav" onclick="toggleFavorite('station', '${s.stationId}', this)" title="收藏站點">
-                            <i class="bi bi-star"></i>
-                        </button>
-                        <span class="text-success small fw-semibold">
-                            <i class="bi bi-clock me-1"></i>即時運行中
-                        </span>
-                    </div>
+                    <button type="button" class="btn-fav" 
+                            onclick="toggleFavorite('station', '${s.stationId}', this)" 
+                            title="收藏站點">
+                        <i class="bi bi-star fs-5"></i>
+                    </button>
+                </div>
+                <div class="text-secondary small mb-2 text-truncate">${s.address || '高雄市公車站牌'}</div>
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                    <span class="text-muted small me-1">行經：</span>
+                    ${routesHtml}
                 </div>
             </div>
         `;

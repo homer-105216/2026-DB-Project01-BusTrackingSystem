@@ -3,7 +3,7 @@
 {% block title %}我的收藏 - 公車即時動態追蹤{% endblock %}
 
 {% block content %}
-{# 前端介面預設收藏項目 #}
+{# 前端介面預設收藏項目#}
 {% set default_fav_routes = [
     {'routeId': 'R100', 'routeName': '100 百貨幹線', 'origin': '瑞豐站', 'destination': '高雄車站'},
     {'routeId': 'R205', 'routeName': '205 中華幹線', 'origin': '加昌站', 'destination': '夢時代'}
@@ -18,7 +18,7 @@
 <div class="container mt-4">
 
     <!-- 頂部標題卡 -->
-    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+    <div class="bg-white p-4 rounded-2 shadow-sm mb-4">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
             <div>
                 <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
@@ -64,7 +64,7 @@
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <span class="route-number-badge">{{ r.routeName }}</span>
-                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                        <button class="btn btn-sm btn-outline-danger rounded-2 px-3" 
                                                 onclick="removeFavorite('route', '{{ r.routeId }}', 'fav-route-card-{{ r.routeId }}', 'route-count')" 
                                                 title="取消收藏">
                                             <i class="bi bi-trash3 me-1"></i>取消收藏
@@ -81,7 +81,7 @@
                                 </div>
                                 <div class="pt-3 border-top d-flex justify-content-between align-items-center">
                                     <span class="badge bg-light text-secondary border">路線已儲存</span>
-                                    <a href="{{ url_for('frontstage.route_detail', route_id=r.routeId) }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                                    <a href="{{ url_for('frontstage.route_detail', route_id=r.routeId) }}" class="btn btn-primary btn-sm rounded-2 px-3 shadow-sm">
                                         查看動態 <i class="bi bi-chevron-right ms-1"></i>
                                     </a>
                                 </div>
@@ -90,11 +90,11 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="bg-white rounded-4 p-5 text-center shadow-sm">
+                <div class="bg-white rounded-2 p-5 text-center shadow-sm">
                     <i class="bi bi-star text-warning opacity-50 display-3 mb-3 d-block"></i>
                     <h5 class="fw-bold text-dark">您尚未收藏任何公車路線</h5>
                     <p class="text-secondary small mb-3">在首頁或路線詳情頁點選星星圖示即可將喜愛的高雄公車路線加入收藏！</p>
-                    <a href="{{ url_for('frontstage.index') }}" class="btn btn-primary rounded-pill px-4">
+                    <a href="{{ url_for('frontstage.index') }}" class="btn btn-primary rounded-2 px-4">
                         前往首頁搜尋路線
                     </a>
                 </div>
@@ -114,7 +114,7 @@
                                             <i class="bi bi-geo-alt-fill text-danger"></i>
                                             <span>{{ s.sName }}</span>
                                         </h5>
-                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                        <button class="btn btn-sm btn-outline-danger rounded-2 px-3" 
                                                 onclick="removeFavorite('station', '{{ s.stationId }}', 'fav-station-card-{{ s.stationId }}', 'station-count')" 
                                                 title="取消收藏">
                                             <i class="bi bi-trash3 me-1"></i>取消收藏
@@ -149,11 +149,11 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="bg-white rounded-4 p-5 text-center shadow-sm">
+                <div class="bg-white rounded-2 p-5 text-center shadow-sm">
                     <i class="bi bi-geo-alt text-danger opacity-50 display-3 mb-3 d-block"></i>
                     <h5 class="fw-bold text-dark">您尚未收藏任何公車站點</h5>
                     <p class="text-secondary small mb-3">在首頁「附近公車路線」或「路線詳情」點擊站牌旁的星星即可收藏！</p>
-                    <a href="{{ url_for('frontstage.index') }}" class="btn btn-primary rounded-pill px-4">
+                    <a href="{{ url_for('frontstage.index') }}" class="btn btn-primary rounded-2 px-4">
                         前往首頁查看站牌
                     </a>
                 </div>
