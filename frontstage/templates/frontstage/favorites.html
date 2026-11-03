@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}我的收藏 - 公車即時動態追蹤{% endblock %}
+
+{% block content %}
+{# 前端介面預設收藏項目 #}
+{% set default_fav_routes = [
+    {'routeId': 'R100', 'routeName': '100 百貨幹線', 'origin': '瑞豐站', 'destination': '高雄車站'},
+    {'routeId': 'R205', 'routeName': '205 中華幹線', 'origin': '加昌站', 'destination': '夢時代'}
+] %}
+{% set fav_routes = fav_routes if fav_routes is defined else default_fav_routes %}
+
+{% set default_fav_stations = [
+    {'stationId': 'S106', 'sName': '高雄車站(中山路)', 'address': '高雄市三民區建國二路318號', 'routes': [{'routeId': 'R100', 'routeName': '100 百貨幹線'}, {'routeId': 'R205', 'routeName': '205 中華幹線'}]},
+    {'stationId': 'S104', 'sName': '新堀江(中央公園)', 'address': '高雄市新興區中山二路', 'routes': [{'routeId': 'R100', 'routeName': '100 百貨幹線'}]}
+] %}
+{% set fav_stations = fav_stations if fav_stations is defined else default_fav_stations %}
+<div class="container mt-4">
+
+    <!-- 頂部標題卡 -->
+    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <div>
+                <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-star-fill text-warning"></i>
+                    <span>我的收藏清單</span>
+                </h3>
+                <p class="text-secondary small mb-0">
+                    管理您儲存的常用公車路線與公車站點，一鍵掌握上下車動態
+                </p>
+            </div>
+            <div class="text-secondary small">
+                登入帳號：<span class="fw-bold text-dark">{{ current_user.userName }}</span>
+            </div>
+        </div>
+
+        <!-- 分頁切換 (Tabs) -->
+        <ul class="nav nav-tabs border-bottom-0 mt-4" id="favTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold px-4 py-2" id="routes-tab" data-bs-toggle="tab" data-bs-target="#routes-pane" type="button" role="tab" aria-selected="true">
+                    <i class="bi bi-signpost-split me-1 text-primary"></i>
+                    收藏路線 (<span id="route-count">{{ fav_routes | length }}</span>)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold px-4 py-2" id="stations-tab" data-bs-toggle="tab" data-bs-target="#stations-pane" type="button" role="tab" aria-selected="false">
+                    <i class="bi bi-geo-alt me-1 text-danger"></i>
+                    收藏站點 (<span id="station-count">{{ fav_stations | length }}</span>)
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab 內容區 -->
+    <div class="tab-content" id="favTabsContent">
+
+        <!-- 1. 收藏的路線 Pane -->
+        <div class="tab-pane fade show active" id="routes-pane" role="tabpanel" aria-labelledby="routes-tab">
+            {% if fav_routes %}
+                <div class="row g-3" id="fav-routes-container">
+                    {% for r in fav_routes %}
+                        <div class="col-md-6 col-lg-4" id="fav-route-card-{{ r.routeId }}">
+                            <div class="route-card p-4 h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="route-number-badge">{{ r.routeName }}</span>
+                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                                onclick="removeFavorite('route', '{{ r.routeId }}', 'fav-route-card-{{ r.routeId }}', 'route-count')" 
+                                                title="取消收藏">
+                                            <i class="bi bi-trash3 me-1"></i>取消收藏
+                                        </button>
+                                    </div>
+                                    <div class="d-flex align-items-center text-dark fw-bold mb-2">
+                                        <span>{{ r.origin }}</span>
+                                        <i class="bi bi-arrow-right mx-2 text-primary"></i>
+                                        <span>{{ r.destination }}</span>
+                                    </div>
+                                    <p class="text-muted small mb-3">
+                                        <i class="bi bi-broadcast me-1 text-success"></i>GPS 即時位置回傳中
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-light text-secondary border">路線已儲存</span>
+                                    <a href="{{ url_for('frontstage.route_detail', route_id=r.routeId) }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                                        查看動態 <i class="bi bi-chevron-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-4 p-5 text-center shadow-sm">
+                    <i class="bi bi-star text-warning opacity-50 display-3 mb-3 d-block"></i>
+                    <h5 class="fw-bold text-dark">您尚未收藏任何公車路線</h5>
+                    <p class="text-secondary small mb-3">在首頁或路線詳情頁點選星星圖示即可將喜愛的高雄公車路線加入收藏！</p>
+                    <a href="{{ url_for('frontstage.index') }}" class="btn btn-primary rounded-pill px-4">
+                        前往首頁搜尋路線
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. 收藏的站點 Pane -->
+        <div class="tab-pane fade" id="stations-pane" role="tabpanel" aria-labelledby="stations-tab">
+            {% if fav_stations %}
+                <div class="row g-3" id="fav-stations-container">
+                    {% for s in fav_stations %}
+                        <div class="col-md-6 col-lg-4" id="fav-station-card-{{ s.stationId }}">
+                            <div class="nearby-station-card p-4 h-100 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                                            <i class="bi bi-geo-alt-fill text-danger"></i>
+                                            <span>{{ s.sName }}</span>
+                                        </h5>
+                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                                                onclick="removeFavorite('station', '{{ s.stationId }}', 'fav-station-card-{{ s.stationId }}', 'station-count')" 
+                                                title="取消收藏">
+                                            <i class="bi bi-trash3 me-1"></i>取消收藏
+                                        </button>
+                                    </div>
+                                    <p class="text-secondary small mb-3 text-truncate" title="{{ s.address }}">
+                                        {{ s.address or '公車站牌' }}
+                                    </p>
+                                    <div class="mb-3">
+                                        <div class="small fw-semibold text-muted mb-1">行經路線：</div>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% if s.routes %}
+                                                {% for r in s.routes %}
+                                                    <a href="{{ url_for('frontstage.route_detail', route_id=r.routeId) }}" class="badge bg-primary text-decoration-none px-2 py-1">
+                                                        {{ r.routeName }}
+                                                    </a>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="text-muted small">暫無路線資料</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-light text-secondary border">常用站牌</span>
+                                    <span class="text-success small fw-semibold">
+                                        <i class="bi bi-check-circle-fill me-1"></i>正常運行
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="bg-white rounded-4 p-5 text-center shadow-sm">
+                    <i class="bi bi-geo-alt text-danger opacity-50 display-3 mb-3 d-block"></i>
+                    <h5 class="fw-bold text-dark">您尚未收藏任何公車站點</h5>
+                    <p class="text-secondary small mb-3">在首頁「附近公車路線」或「路線詳情」點擊站牌旁的星星即可收藏！</p>
+                    <a href="{{ url_for('frontstage.index') }}" class="btn btn-primary rounded-pill px-4">
+                        前往首頁查看站牌
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    /**
+     * 在收藏頁面移除收藏並即時更新 DOM
+     */
+    async function removeFavorite(type, id, cardId, counterId) {
+        if (!confirm('確定要取消收藏此項目嗎？')) return;
+
+        try {
+            const res = await fetch(`/api/favorite/${type}/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+            if (data.success) {
+                showToast(data.message);
+                const card = document.getElementById(cardId);
+                if (card) {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    setTimeout(() => card.remove(), 300);
+                }
+                const counter = document.getElementById(counterId);
+                if (counter) {
+                    let num = parseInt(counter.innerText) || 0;
+                    if (num > 0) counter.innerText = num - 1;
+                }
+            } else {
+                showToast(data.message || '操作失敗', true);
+            }
+        } catch (e) {
+            console.error(e);
+            showToast('網路連線異常', true);
+        }
+    }
+</script>
+{% endblock %}

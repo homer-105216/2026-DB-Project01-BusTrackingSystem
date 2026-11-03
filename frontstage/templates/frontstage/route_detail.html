@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ route.routeName }} 公車即時動態 - {{ route.origin }} 往返 {{ route.destination }}{% endblock %}
+
+{% block content %}
+{# 前端預設高雄公車路線動態資料 #}
+{% set default_route = {'routeId': route_id or 'R100', 'routeName': '100 百貨幹線', 'origin': '瑞豐站', 'destination': '高雄車站'} %}
+{% set route = route or default_route %}
+{% set direction = direction or 0 %}
+
+{% set default_stations = [
+    {'stationId': 'S101', 'sName': '瑞豐站(武營路)', 'address': '高雄市前鎮區武營路425號', 'stopSequence': 1, 'sLatitude': 22.6105, 'sLongitude': 120.3340},
+    {'stationId': 'S102', 'sName': '三多三路口', 'address': '高雄市苓雅區三多三路', 'stopSequence': 2, 'sLatitude': 22.6152, 'sLongitude': 120.3168},
+    {'stationId': 'S103', 'sName': '捷運三多商圈站', 'address': '高雄市苓雅區中山二路', 'stopSequence': 3, 'sLatitude': 22.6139, 'sLongitude': 120.3038},
+    {'stationId': 'S104', 'sName': '新堀江(中央公園)', 'address': '高雄市新興區中山二路', 'stopSequence': 4, 'sLatitude': 22.6231, 'sLongitude': 120.3005},
+    {'stationId': 'S105', 'sName': '捷運美麗島站', 'address': '高雄市新興區中山一路', 'stopSequence': 5, 'sLatitude': 22.6314, 'sLongitude': 120.3019},
+    {'stationId': 'S106', 'sName': '高雄車站(中山路)', 'address': '高雄市三民區建國二路318號', 'stopSequence': 6, 'sLatitude': 22.6397, 'sLongitude': 120.3022}
+] %}
+{% set stations = stations or default_stations %}
+
+{% set default_trips = [
+    {'tId': 'T100-01', 'departureTime': '08:00', 'driver': '陳大華', 'status': '行駛中', 'bId': 'EAA-789', 'busType': '電動低地板公車'},
+    {'tId': 'T100-02', 'departureTime': '08:15', 'driver': '林敬業', 'status': '未發車', 'bId': 'EAA-790', 'busType': '電動低地板公車'},
+    {'tId': 'T100-03', 'departureTime': '08:30', 'driver': '黃建廷', 'status': '未發車', 'bId': 'KKB-6618', 'busType': '低地板公車'}
+] %}
+{% set trips = trips or default_trips %}
+
+{% set default_buses = [
+    {'tId': 'T100-01', 'driver': '陳大華', 'status': '行駛中', 'bId': 'EAA-789', 'busType': '電動低地板公車', 'latitude': 22.6231, 'longitude': 120.3005, 'nearestStationId': 'S104', 'recordDatetime': '08:25:00'}
+] %}
+{% set buses = buses or default_buses %}
+{% set favorite_station_ids = favorite_station_ids or [] %}
+<div class="container mt-4">
+
+    <!-- 路線頂部摘要與收藏卡片 -->
+    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <span class="route-number-badge fs-2 px-3 py-2">{{ route.routeName }}</span>
+                <div>
+                    <h3 class="fw-bold mb-1 text-dark">
+                        {{ route.origin }}
+                        <i class="bi bi-arrow-left-right mx-2 text-primary fs-5"></i>
+                        {{ route.destination }}
+                    </h3>
+                    <div class="d-flex align-items-center gap-2 text-secondary small">
+                        <span>路線編號：<code>{{ route.routeId }}</code></span>
+                        <span>•</span>
+                        <span class="text-success fw-semibold"><i class="bi bi-circle-fill fs-6 me-1" style="font-size: 8px;"></i>即時動態追蹤中</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 路線收藏按鈕 -->
+            <div>
+                <button type="button" 
+                        class="btn {% if is_fav_route %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} btn-lg rounded-pill px-4 shadow-sm d-flex align-items-center gap-2 fw-semibold"
+                        id="route-fav-btn"
+                        onclick="toggleFavorite('route', '{{ route.routeId }}', this)">
+                    <i class="bi {% if is_fav_route %}bi-star-fill text-dark{% else %}bi-star{% endif %} fs-5"></i>
+                    <span class="fav-label">{% if is_fav_route %}已收藏路線{% else %}收藏路線{% endif %}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 去程 / 返程 方向切換 Pills -->
+        <div class="mt-4 pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <ul class="nav nav-pills nav-pills-transit gap-2">
+                <li class="nav-item">
+                    <a class="nav-link {% if direction == 0 %}active{% endif %}" 
+                       href="{{ url_for('frontstage.route_detail', route_id=route.routeId, direction=0) }}">
+                        <i class="bi bi-arrow-right-circle me-1"></i>去程：往 {{ route.destination }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if direction == 1 %}active{% endif %}" 
+                       href="{{ url_for('frontstage.route_detail', route_id=route.routeId, direction=1) }}">
+                        <i class="bi bi-arrow-left-circle me-1"></i>返程：往 {{ route.origin }}
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2 text-muted small">
+                <span id="live-refresh-badge" class="badge bg-light text-secondary border">
+                    <i class="bi bi-arrow-clockwise me-1"></i>動態每 15 秒更新
+                </span>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="refreshLiveData()">
+                    <i class="bi bi-arrow-repeat"></i> 立即更新
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主要內容區：左側站點動態時間軸，右側互動式地圖與今日班次 -->
+    <div class="row g-4">
+
+        <!-- 左側：路線站點時間軸與即時到站狀態 -->
+        <div class="col-lg-5">
+            <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-signpost-split-fill text-primary"></i>
+                        <span>路線站點順序 (共 {{ stations | length }} 站)</span>
+                    </h5>
+                    <span class="badge bg-info-subtle text-info-emphasis rounded-pill">
+                        {% if direction == 0 %}去程{% else %}返程{% endif %}
+                    </span>
+                </div>
+
+                {% if stations %}
+                    <div class="station-timeline mt-3" id="stations-timeline-container">
+                        {% for s in stations %}
+                            {# 檢查是否有行駛中公車停在此站附近 #}
+                            {% set ns = namespace(bus_here=None) %}
+                            {% for b in buses %}
+                                {% if b.nearestStationId == s.stationId %}
+                                    {% set ns.bus_here = b %}
+                                {% endif %}
+                            {% endfor %}
+
+                            <div class="timeline-item {% if ns.bus_here %}active-bus{% endif %}" id="station-item-{{ s.stationId }}">
+                                <div class="timeline-dot"></div>
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <span class="badge bg-secondary-subtle text-secondary-emphasis fw-bold">
+                                                {{ s.stopSequence }}
+                                            </span>
+                                            <span class="fw-bold text-dark fs-6">{{ s.sName }}</span>
+                                        </div>
+                                        <div class="text-secondary small text-truncate" style="max-width: 220px;" title="{{ s.address }}">
+                                            {{ s.address or '公車專用停靠站' }}
+                                        </div>
+
+                                        {# 若此站有公車，顯示即時車牌與司機 #}
+                                        {% if ns.bus_here %}
+                                            <div class="mt-2 p-2 bg-warning-subtle rounded-3 small text-dark d-flex align-items-center gap-2 border border-warning">
+                                                <i class="bi bi-bus-front-fill text-warning-emphasis fs-6"></i>
+                                                <div>
+                                                    <span class="fw-bold">{{ ns.bus_here.bId }}</span>
+                                                    <span class="text-muted ms-1">({{ ns.bus_here.driver }} 司機)</span>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- 站點右側：預估到站時間 Badge & 站點收藏按鈕 -->
+                                    <div class="d-flex flex-column align-items-end gap-2">
+                                        {% if ns.bus_here %}
+                                            <span class="status-pill status-arriving">即將進站</span>
+                                        {% elif loop.index == 1 %}
+                                            <span class="status-pill status-arriving">發車站</span>
+                                        {% elif loop.index <= 3 %}
+                                            <span class="status-pill status-mins">{{ loop.index * 3 }} 分鐘</span>
+                                        {% else %}
+                                            <span class="status-pill status-not-departed">未發車</span>
+                                        {% endif %}
+
+                                        <!-- 站點收藏按鈕 -->
+                                        <button type="button" 
+                                                class="btn-fav {% if s.stationId in favorite_station_ids %}active{% endif %}"
+                                                onclick="toggleFavorite('station', '{{ s.stationId }}', this)" 
+                                                title="{% if s.stationId in favorite_station_ids %}已收藏站點{% else %}收藏站點{% endif %}">
+                                            <i class="bi {% if s.stationId in favorite_station_ids %}bi-star-fill text-warning{% else %}bi-star{% endif %} fs-5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        暫無站點順序資料
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 右側：互動式即時地圖與今日班次表 -->
+        <div class="col-lg-7">
+            <!-- 1. Leaflet 即時動態地圖 -->
+            <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-map-fill text-primary"></i>
+                        <span>即時車輛位置地圖</span>
+                    </h5>
+                    <div class="small text-muted d-flex align-items-center gap-3">
+                        <span><span class="badge bg-primary p-1 me-1"> </span>站牌</span>
+                        <span><span class="badge bg-warning p-1 me-1"> </span>公車即時 GPS</span>
+                    </div>
+                </div>
+
+                <!-- 地圖 DOM -->
+                <div id="bus-map"></div>
+
+                <div class="mt-3 p-3 bg-light rounded-3 d-flex flex-wrap justify-content-between align-items-center gap-2 small text-secondary">
+                    <div>
+                        <i class="bi bi-info-circle me-1 text-primary"></i>
+                        <span>線上行駛公車：<strong class="text-dark">{{ buses | length }}</strong> 輛</span>
+                    </div>
+                    <div>
+                        <span>最新定位紀錄時間：<span id="last-update-time">{{ buses[0].recordDatetime if buses else '今日即時' }}</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 今日排班發車時刻表 (Daily Trips & Buses) -->
+            <div class="bg-white p-4 rounded-4 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary"></i>
+                        <span>今日班表與車輛資訊</span>
+                    </h5>
+                    <span class="badge bg-secondary-subtle text-secondary small">
+                        Trip & Daily Implement
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-transit align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>班次編號</th>
+                                <th>預定發車</th>
+                                <th>公車車號</th>
+                                <th>公車車型</th>
+                                <th>配班司機</th>
+                                <th>行駛狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trips-table-body">
+                            {% if trips %}
+                                {% for t in trips %}
+                                    <tr>
+                                        <td><code>{{ t.tId }}</code></td>
+                                        <td class="fw-bold text-dark">{{ t.departureTime }}</td>
+                                        <td>
+                                            {% if t.bId != '-' %}
+                                                <span class="badge bg-light text-dark border fw-bold">{{ t.bId }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="small text-secondary">{{ t.busType }}</td>
+                                        <td>
+                                            <i class="bi bi-person-badge text-muted me-1"></i>{{ t.driver }}
+                                        </td>
+                                        <td>
+                                            {% if t.status == '行駛中' %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                    <i class="bi bi-play-circle-fill me-1"></i>行駛中
+                                                </span>
+                                            {% elif t.status == '未發車' %}
+                                                <span class="badge bg-secondary-subtle text-secondary">
+                                                    未發車
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-info-subtle text-info">
+                                                    {{ t.status }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">今日暫無排班資料</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 伺服器傳遞之資料
+    const routeId = "{{ route.routeId }}";
+    const currentDirection = {{ direction }};
+    const stationsData = {{ stations | tojson }};
+    let activeBusesData = {{ buses | tojson }};
+
+    let map = null;
+    let markersLayer = null;
+    let busMarkersLayer = null;
+    let routePolyline = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initMap();
+        // 每 15 秒輪詢即時公車動態
+        setInterval(refreshLiveData, 15000);
+    });
+
+    /**
+     * 初始化 Leaflet 地圖與繪製站點
+     */
+    function initMap() {
+        if (!stationsData || stationsData.length === 0) return;
+
+        // 計算中心座標（預設以高雄為基準）
+        const firstStation = stationsData[0];
+        const centerLat = firstStation.sLatitude || 22.6397;
+        const centerLng = firstStation.sLongitude || 120.3022;
+
+        map = L.map('bus-map').setView([centerLat, centerLng], 13);
+
+        // OpenStreetMap 圖資
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        markersLayer = L.layerGroup().addTo(map);
+        busMarkersLayer = L.layerGroup().addTo(map);
+
+        renderStationsOnMap();
+        renderBusesOnMap(activeBusesData);
+    }
+
+    /**
+     * 繪製站牌與連線
+     */
+    function renderStationsOnMap() {
+        markersLayer.clearLayers();
+        const latlngs = [];
+
+        stationsData.forEach((s) => {
+            if (s.sLatitude && s.sLongitude) {
+                const latlng = [s.sLatitude, s.sLongitude];
+                latlngs.push(latlng);
+
+                // 自訂站牌圖示
+                const stopIcon = L.divIcon({
+                    className: 'station-div-icon',
+                    html: `<div style="background-color: #2563eb; color: #fff; width: 22px; height: 22px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${s.stopSequence}</div>`,
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11]
+                });
+
+                const marker = L.marker(latlng, { icon: stopIcon })
+                    .bindPopup(`
+                        <div class="p-1">
+                            <strong class="text-primary">${s.stopSequence}. ${s.sName}</strong><br>
+                            <small class="text-muted">${s.address || '公車站牌'}</small>
+                        </div>
+                    `);
+                markersLayer.addLayer(marker);
+            }
+        });
+
+        // 畫出路線折線
+        if (latlngs.length > 1) {
+            if (routePolyline) map.removeLayer(routePolyline);
+            routePolyline = L.polyline(latlngs, {
+                color: '#2563eb',
+                weight: 5,
+                opacity: 0.75,
+                dashArray: '8, 8'
+            }).addTo(map);
+
+            map.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+        }
+    }
+
+    /**
+     * 繪製即時公車位置
+     */
+    function renderBusesOnMap(buses) {
+        busMarkersLayer.clearLayers();
+        if (!buses) return;
+
+        buses.forEach((b) => {
+            if (b.latitude && b.longitude) {
+                const busIcon = L.divIcon({
+                    className: 'leaflet-bus-icon active',
+                    html: `🚌`,
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 17]
+                });
+
+                const marker = L.marker([b.latitude, b.longitude], { icon: busIcon, zIndexOffset: 1000 })
+                    .bindPopup(`
+                        <div class="p-2">
+                            <span class="badge bg-warning text-dark mb-1">即時行駛中</span><br>
+                            <h6 class="fw-bold mb-1">${b.bId}</h6>
+                            <div class="small text-secondary">車型：${b.busType}</div>
+                            <div class="small text-secondary">駕駛：${b.driver}</div>
+                            <div class="small text-muted mt-1">更新：${b.recordDatetime || '剛才'}</div>
+                        </div>
+                    `);
+                busMarkersLayer.addLayer(marker);
+            }
+        });
+    }
+
+    /**
+     * AJAX 刷新即時動態位置
+     */
+    async function refreshLiveData() {
+        const badge = document.getElementById('live-refresh-badge');
+        if (badge) badge.innerHTML = '<i class="bi bi-arrow-repeat spin me-1"></i>更新中...';
+
+        try {
+            const res = await fetch(`/api/bus/live/${routeId}?direction=${currentDirection}`);
+            const data = await res.json();
+            if (data.success) {
+                activeBusesData = data.buses;
+                renderBusesOnMap(data.buses);
+                const timeEl = document.getElementById('last-update-time');
+                if (timeEl) {
+                    const now = new Date();
+                    timeEl.innerText = now.toLocaleTimeString();
+                }
+            }
+        } catch (err) {
+            console.error('Refresh live data error:', err);
+        } finally {
+            if (badge) badge.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>動態每 15 秒更新';
+        }
+    }
+</script>
+{% endblock %}
