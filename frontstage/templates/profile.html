@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}帳號設定 - 高雄公車即時動態追蹤{% endblock %}
+
+{% block content %}
+{# 前端介面預設會員資料展示 #}
+{% set default_member = {'mId': 1, 'userName': 'kaohsiung_commuter', 'email': 'commuter@kh.edu.tw', 'registerDatetime': '2026-11-01 10:00:00'} %}
+{% set member = member if member is defined and member else default_member %}
+{% set fav_routes_count = fav_routes_count if fav_routes_count is defined else 2 %}
+{% set fav_stations_count = fav_stations_count if fav_stations_count is defined else 2 %}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- 頁面標題 -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-gear-fill text-primary"></i>
+                        <span>帳號與個人設定</span>
+                    </h3>
+                    <p class="text-secondary small mb-0">管理您的個人基本資料與登入密碼安全</p>
+                </div>
+                <a href="{{ url_for('frontstage.favorites') }}" class="btn btn-outline-secondary btn-sm rounded-2 px-3">
+                    <i class="bi bi-star-fill text-warning me-1"></i>我的收藏
+                </a>
+            </div>
+
+            <!-- 會員概況儀表板卡片 -->
+            <div class="bg-white p-4 rounded-2 shadow-sm mb-4 border">
+                <div class="d-flex flex-column flex-sm-row align-items-center gap-4">
+                    <div class="brand-icon-box bg-primary text-white" style="width: 72px; height: 72px; border-radius: 4px;">
+                        <i class="bi bi-person-circle fs-1"></i>
+                    </div>
+                    <div class="text-center text-sm-start flex-grow-1">
+                        <h4 class="fw-bold mb-1 text-dark" id="display-username">{{ member.userName }}</h4>
+                        <div class="text-secondary small mb-2" id="display-email">{{ member.email }}</div>
+                        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-sm-start small">
+                            <span class="badge bg-light text-secondary border">
+                                會員編號 (mId)：#{{ member.mId }}
+                            </span>
+                            <span class="badge bg-light text-secondary border">
+                                <i class="bi bi-calendar3 me-1"></i>註冊時間：{{ member.registerDatetime }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 text-center border-start ps-sm-4">
+                        <div>
+                            <div class="fs-4 fw-bold text-primary">{{ fav_routes_count }}</div>
+                            <div class="small text-muted">收藏路線</div>
+                        </div>
+                        <div>
+                            <div class="fs-4 fw-bold text-danger">{{ fav_stations_count }}</div>
+                            <div class="small text-muted">收藏站點</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 修改個人資料與密碼表單 (具備前端輸入驗證) -->
+            <div class="bg-white p-4 p-md-5 rounded-2 shadow-sm border">
+                <form action="{{ url_for('frontstage.profile') }}" method="POST" id="profile-form" novalidate>
+                    
+                    <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+                        <i class="bi bi-person-lines-fill text-primary"></i>
+                        <span>基本資料維護</span>
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">使用者名稱 (userName)</label>
+                            <input type="text" name="username" id="profile-username" class="form-control" value="{{ member.userName }}" required minlength="3">
+                            <div class="invalid-feedback">使用者名稱不得少於 3 個字元！</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">電子郵件 (email)</label>
+                            <input type="email" name="email" id="profile-email" class="form-control" value="{{ member.email }}" required>
+                            <div class="invalid-feedback">請輸入有效的電子郵件格式！</div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-lock-fill text-danger"></i>
+                        <span>變更密碼 (如不修改請留空)</span>
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold text-dark small">目前密碼 (欲變更密碼時必填)</label>
+                            <input type="password" name="current_password" id="profile-current-pwd" class="form-control" placeholder="請輸入目前的密碼以供驗證">
+                            <div class="invalid-feedback">欲變更密碼時，請填寫目前密碼！</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">新密碼</label>
+                            <input type="password" name="new_password" id="profile-new-pwd" class="form-control" placeholder="請設定 6 位以上新密碼" minlength="6">
+                            <div class="invalid-feedback">新密碼長度至少需 6 個字元！</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-dark small">確認新密碼</label>
+                            <input type="password" name="confirm_new_password" id="profile-confirm-pwd" class="form-control" placeholder="再次輸入新密碼" minlength="6">
+                            <div class="invalid-feedback">新密碼兩次輸入不相符！</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{{ url_for('frontstage.index') }}" class="btn btn-outline-secondary rounded-2 px-4">
+                            回首頁
+                        </a>
+                        <button type="submit" class="btn btn-primary rounded-2 px-4 fw-semibold shadow-sm">
+                            <i class="bi bi-check-lg me-1"></i>儲存變更
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

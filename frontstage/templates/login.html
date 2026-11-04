@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}會員登入 - 高雄公車即時動態追蹤{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <!-- 登入卡片 -->
+            <div class="bg-white p-4 p-md-5 rounded-2 shadow-sm border">
+                <div class="text-center mb-4">
+                    <div class="brand-icon-box bg-primary text-white mx-auto mb-3" style="width: 58px; height: 58px;">
+                        <i class="bi bi-person-fill fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark">乘客會員登入</h3>
+                    <p class="text-secondary small">登入以使用公車路線與站點收藏等專屬功能</p>
+                </div>
+
+                <form action="{{ url_for('frontstage.login') }}" method="POST" id="login-form" novalidate>
+                    <input type="hidden" name="next" value="{{ next or url_for('frontstage.index') }}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark small">使用者名稱 或 Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                            <input type="text" name="identifier" id="login-identifier" class="form-control" placeholder="請輸入使用者名稱或電子郵件" required autofocus>
+                            <div class="invalid-feedback">請輸入帳號或電子郵件！</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark small">登入密碼</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" id="login-password" class="form-control" placeholder="請輸入密碼" required minlength="6">
+                            <div class="invalid-feedback">請輸入密碼（至少 6 碼）！</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-2 fw-bold shadow-sm mb-3">
+                        登入帳號
+                    </button>
+
+                    <!-- 快速填入測試帳號輔助鈕 (方便前端展示) -->
+                    <div class="p-3 bg-light rounded-2 small text-muted mb-3 border">
+                        <div class="fw-semibold text-dark mb-1">
+                            <i class="bi bi-lightbulb-fill text-warning me-1"></i>測試示範帳號：
+                        </div>
+                        <div>帳號：<code>demo_user</code></div>
+                        <div>密碼：<code>password123</code></div>
+                        <button type="button" class="btn btn-link btn-sm p-0 text-primary mt-1" onclick="fillDemoUser()">
+                            一鍵帶入示範帳號
+                        </button>
+                    </div>
+
+                    <div class="text-center small text-secondary">
+                        還沒有會員帳號？
+                        <a href="{{ url_for('frontstage.register') }}" class="text-primary fw-bold text-decoration-none ms-1">
+                            立即免費註冊
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function fillDemoUser() {
+        const idInput = document.getElementById('login-identifier');
+        const pwdInput = document.getElementById('login-password');
+        if (idInput) idInput.value = 'demo_user';
+        if (pwdInput) pwdInput.value = 'password123';
+    }
+</script>
+{% endblock %}
