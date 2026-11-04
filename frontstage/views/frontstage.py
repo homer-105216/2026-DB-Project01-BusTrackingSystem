@@ -105,7 +105,7 @@ ROUTE_DETAILS_DATA = {
             {'stationId': 'S106', 'sName': '高雄車站(中山路)', 'address': '高雄市三民區建國二路318號', 'stopSequence': 6, 'sLatitude': 22.6397, 'sLongitude': 120.3022}
         ],
         'buses': [
-            {'tId': 'T100-01', 'driver': '陳大華', 'status': '行駛中', 'bId': 'EAA-789', 'busType': '電動低地板公車', 'latitude': 22.6231, 'longitude': 120.3005, 'nearestStationId': 'S104', 'recordDatetime': '08:25:00', 'speed': '36 km/h'}
+            {'tId': 'T100-01', 'driver': '陳大華', 'status': '行駛中', 'bId': 'EAA-789', 'busType': '電動低地板公車', 'latitude': 22.6231, 'longitude': 120.3005, 'lLatitude': 22.6231, 'lLongitude': 120.3005, 'nearestStationId': 'S104', 'recordDatetime': '08:25:00', 'speed': '36 km/h'}
         ],
         'trips': [
             {'tId': 'T100-01', 'departureTime': '08:00', 'driver': '陳大華', 'status': '行駛中', 'bId': 'EAA-789', 'busType': '電動低地板公車'},
@@ -125,7 +125,7 @@ ROUTE_DETAILS_DATA = {
             {'stationId': 'S206', 'sName': '夢時代(中華五路)', 'address': '高雄市前鎮區中華五路789號', 'stopSequence': 6, 'sLatitude': 22.5950, 'sLongitude': 120.3060}
         ],
         'buses': [
-            {'tId': 'T205-01', 'driver': '張永生', 'status': '行駛中', 'bId': 'KKB-5288', 'busType': '低地板公車', 'latitude': 22.6397, 'longitude': 120.3022, 'nearestStationId': 'S106', 'recordDatetime': '08:24:10', 'speed': '32 km/h'}
+            {'tId': 'T205-01', 'driver': '張永生', 'status': '行駛中', 'bId': 'KKB-5288', 'busType': '低地板公車', 'latitude': 22.6397, 'longitude': 120.3022, 'lLatitude': 22.6397, 'lLongitude': 120.3022, 'nearestStationId': 'S106', 'recordDatetime': '08:24:10', 'speed': '32 km/h'}
         ],
         'trips': [
             {'tId': 'T205-01', 'departureTime': '08:05', 'driver': '張永生', 'status': '行駛中', 'bId': 'KKB-5288', 'busType': '低地板公車'},
@@ -144,7 +144,7 @@ ROUTE_DETAILS_DATA = {
             {'stationId': 'S306', 'sName': '金獅湖站(回程)', 'address': '高雄市三民區鼎金後路', 'stopSequence': 6, 'sLatitude': 22.6650, 'sLongitude': 120.3250}
         ],
         'buses': [
-            {'tId': 'T168-01', 'driver': '李政憲', 'status': '行駛中', 'bId': 'EAA-556', 'busType': '電動低地板公車', 'latitude': 22.6470, 'longitude': 120.3100, 'nearestStationId': 'S303', 'recordDatetime': '08:26:30', 'speed': '38 km/h'}
+            {'tId': 'T168-01', 'driver': '李政憲', 'status': '行駛中', 'bId': 'EAA-556', 'busType': '電動低地板公車', 'latitude': 22.6470, 'longitude': 120.3100, 'lLatitude': 22.6470, 'lLongitude': 120.3100, 'nearestStationId': 'S303', 'recordDatetime': '08:26:30', 'speed': '38 km/h'}
         ],
         'trips': [
             {'tId': 'T168-01', 'departureTime': '08:10', 'driver': '李政憲', 'status': '行駛中', 'bId': 'EAA-556', 'busType': '電動低地板公車'},
@@ -162,7 +162,7 @@ ROUTE_DETAILS_DATA = {
             {'stationId': 'S406', 'sName': '鼓山輪渡站', 'address': '高雄市鼓山區濱海二路', 'stopSequence': 6, 'sLatitude': 22.6210, 'sLongitude': 120.2700}
         ],
         'buses': [
-            {'tId': 'T50-01', 'driver': '周俊男', 'status': '行駛中', 'bId': '732-FP', 'busType': '低地板公車', 'latitude': 22.6225, 'longitude': 120.2980, 'nearestStationId': 'S404', 'recordDatetime': '08:23:45', 'speed': '30 km/h'}
+            {'tId': 'T50-01', 'driver': '周俊男', 'status': '行駛中', 'bId': '732-FP', 'busType': '低地板公車', 'latitude': 22.6225, 'longitude': 120.2980, 'lLatitude': 22.6225, 'lLongitude': 120.2980, 'nearestStationId': 'S404', 'recordDatetime': '08:23:45', 'speed': '30 km/h'}
         ],
         'trips': [
             {'tId': 'T50-01', 'departureTime': '08:12', 'driver': '周俊男', 'status': '行駛中', 'bId': '732-FP', 'busType': '低地板公車'},
@@ -179,7 +179,7 @@ ROUTE_DETAILS_DATA = {
             {'stationId': 'S106', 'sName': '高雄車站(中山路)', 'address': '高雄市三民區建國二路318號', 'stopSequence': 5, 'sLatitude': 22.6397, 'sLongitude': 120.3022}
         ],
         'buses': [
-            {'tId': 'TRD30-01', 'driver': '洪志偉', 'status': '行駛中', 'bId': 'KKB-3188', 'busType': '通用無障礙中巴', 'latitude': 22.6460, 'longitude': 120.3500, 'nearestStationId': 'S503', 'recordDatetime': '08:24:50', 'speed': '28 km/h'}
+            {'tId': 'TRD30-01', 'driver': '洪志偉', 'status': '行駛中', 'bId': 'KKB-3188', 'busType': '通用無障礙中巴', 'latitude': 22.6460, 'longitude': 120.3500, 'lLatitude': 22.6460, 'lLongitude': 120.3500, 'nearestStationId': 'S503', 'recordDatetime': '08:24:50', 'speed': '28 km/h'}
         ],
         'trips': [
             {'tId': 'TRD30-01', 'departureTime': '08:20', 'driver': '洪志偉', 'status': '行駛中', 'bId': 'KKB-3188', 'busType': '通用無障礙中巴'},
@@ -208,7 +208,7 @@ def route_detail(route_id):
         route_info['routeId'] = route_id
         route_info['routeName'] = f'{route_id} 號公車'
 
-    # 若為返程 (direction=1)，站牌清單順序反向排列
+    # 若為回程 (direction=1)，站牌清單順序反向排列
     if direction == 1:
         stations_list = list(reversed(stations_list))
         for idx, s in enumerate(stations_list):
