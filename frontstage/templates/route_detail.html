@@ -87,7 +87,7 @@
                 <li class="nav-item">
                     <a class="nav-link {% if direction == 1 %}active{% endif %}" 
                        href="{{ url_for('frontstage.route_detail', route_id=route.routeId, direction=1) }}">
-                        <i class="bi bi-arrow-left-circle me-1"></i>返程：往 {{ route.origin }}
+                        <i class="bi bi-arrow-left-circle me-1"></i>回程：往 {{ route.origin }}
                     </a>
                 </li>
             </ul>
@@ -115,7 +115,7 @@
                         <span>路線站點順序 (共 {{ stations | length }} 站)</span>
                     </h5>
                     <span class="badge bg-primary-subtle text-primary border rounded-2">
-                        {% if direction == 0 %}去程：往 {{ route.destination }}{% else %}返程：往 {{ route.origin }}{% endif %}
+                        {% if direction == 0 %}去程：往 {{ route.destination }}{% else %}回程：往 {{ route.origin }}{% endif %}
                     </span>
                 </div>
 
@@ -154,7 +154,7 @@
                                         {# 若此站有即時公車，顯著展示公車車號與司機 #}
                                         {% if ns.bus_here %}
                                             <div class="mt-2 p-2 bg-warning-subtle rounded-2 small text-dark d-flex align-items-center justify-content-between border border-warning"
-                                                 onclick="event.stopPropagation(); focusBusOnMap({{ ns.bus_here.latitude }}, {{ ns.bus_here.longitude }}, '{{ ns.bus_here.bId }}')">
+                                                 onclick="event.stopPropagation(); focusBusOnMap({{ ns.bus_here.lLatitude or ns.bus_here.latitude }}, {{ ns.bus_here.lLongitude or ns.bus_here.longitude }}, '{{ ns.bus_here.bId }}')">
                                                 <div class="d-flex align-items-center gap-2">
                                                     <i class="bi bi-bus-front-fill text-warning-emphasis fs-5"></i>
                                                     <div>
@@ -227,7 +227,7 @@
                         <span>線上行駛公車：<strong class="text-dark">{{ buses | length }}</strong> 輛</span>
                         {% for b in buses %}
                             <button type="button" class="btn btn-xs btn-outline-dark py-0 px-2 rounded-1 fw-bold"
-                                    onclick="focusBusOnMap({{ b.latitude }}, {{ b.longitude }}, '{{ b.bId }}')">
+                                    onclick="focusBusOnMap({{ b.lLatitude or b.latitude }}, {{ b.lLongitude or b.longitude }}, '{{ b.bId }}')">
                                 <i class="bi bi-geo-alt-fill text-warning me-1"></i>定位車號：{{ b.bId }}
                             </button>
                         {% endfor %}
@@ -419,7 +419,9 @@
         if (!buses) return;
 
         buses.forEach((b) => {
-            if (b.latitude && b.longitude) {
+            const bLat = b.lLatitude || b.latitude;
+            const bLng = b.lLongitude || b.longitude;
+            if (bLat && bLng) {
                 // 自訂包含公車車號的 Marker
                 const busIcon = L.divIcon({
                     className: 'leaflet-bus-pin',
@@ -431,7 +433,7 @@
                     iconAnchor: [30, 46]
                 });
 
-                const marker = L.marker([b.latitude, b.longitude], { icon: busIcon, zIndexOffset: 1000 })
+                const marker = L.marker([bLat, bLng], { icon: busIcon, zIndexOffset: 1000 })
                     .bindPopup(`
                         <div class="p-2">
                             <span class="badge bg-warning text-dark mb-1">公車即時行駛中</span><br>
