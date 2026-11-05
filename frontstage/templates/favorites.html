@@ -63,20 +63,22 @@
                             <div class="route-card p-4 h-100 d-flex flex-column justify-content-between">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="route-number-badge">{{ r.routeName }}</span>
+                                        <a href="{{ url_for('frontstage.route_detail', route_id=r.routeId) }}" class="route-number-badge text-decoration-none" title="點擊查看路線">
+                                            {{ r.routeName }}
+                                        </a>
                                         <button class="btn btn-sm btn-outline-danger rounded-2 px-3" 
                                                 onclick="removeFavorite('route', '{{ r.routeId }}', 'fav-route-card-{{ r.routeId }}', 'route-count')" 
                                                 title="取消收藏">
                                             <i class="bi bi-trash3 me-1"></i>取消收藏
                                         </button>
                                     </div>
-                                    <div class="d-flex align-items-center text-dark fw-bold mb-2">
+                                    <a href="{{ url_for('frontstage.route_detail', route_id=r.routeId) }}" class="d-flex align-items-center text-dark fw-bold mb-2 text-decoration-none">
                                         <span>{{ r.origin }}</span>
                                         <i class="bi bi-arrow-right mx-2 text-primary"></i>
                                         <span>{{ r.destination }}</span>
-                                    </div>
+                                    </a>
                                     <p class="text-muted small mb-3">
-                                        <i class="bi bi-broadcast me-1 text-success"></i>GPS 即時位置回傳中
+                                        <i class="bi bi-broadcast me-1 text-success"></i>即時位置回傳中
                                     </p>
                                 </div>
                                 <div class="pt-3 border-top d-flex justify-content-between align-items-center">
@@ -107,7 +109,7 @@
                 <div class="row g-3" id="fav-stations-container">
                     {% for s in fav_stations %}
                         <div class="col-md-6 col-lg-4" id="fav-station-card-{{ s.stationId }}">
-                            <div class="nearby-station-card p-4 h-100 d-flex flex-column justify-content-between">
+                            <div class="route-card p-4 h-100 d-flex flex-column justify-content-between">
                                 <div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
@@ -123,7 +125,7 @@
                                     <p class="text-secondary small mb-3 text-truncate" title="{{ s.address }}">
                                         {{ s.address or '公車站牌' }}
                                     </p>
-                                    <div class="mb-3">
+                                    <div class="mb-0">
                                         <div class="small fw-semibold text-muted mb-1">行經路線：</div>
                                         <div class="d-flex flex-wrap gap-1">
                                             {% if s.routes %}
@@ -137,12 +139,6 @@
                                             {% endif %}
                                         </div>
                                     </div>
-                                </div>
-                                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
-                                    <span class="badge bg-light text-secondary border">常用站牌</span>
-                                    <span class="text-success small fw-semibold">
-                                        <i class="bi bi-check-circle-fill me-1"></i>正常運行
-                                    </span>
                                 </div>
                             </div>
                         </div>

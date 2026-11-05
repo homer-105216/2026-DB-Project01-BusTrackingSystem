@@ -35,9 +35,7 @@
                         <span>•</span>
                         <span>班距：{{ route.headway or '尖峰 10-15 分 / 離峰 15-20 分' }}</span>
                         <span>•</span>
-                        <span class="text-success fw-semibold">
-                            <i class="bi bi-broadcast me-1"></i>GPS 即時動態連線中
-                        </span>
+                        <span>票價計費：<strong class="text-dark">{{ route.fare or '一段票 12 元' }}</strong></span>
                     </div>
                 </div>
             </div>
@@ -54,26 +52,7 @@
             </div>
         </div>
 
-        <!-- 線上行駛公車車號摘要欄 -->
-        <div class="mt-3 p-2 px-3 bg-light rounded-2 border d-flex flex-wrap align-items-center justify-content-between gap-2 small">
-            <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-bus-front-fill text-primary fs-6"></i>
-                <span class="text-secondary">目前線上行駛公車：</span>
-                {% if buses %}
-                    {% for b in buses %}
-                        <span class="badge bg-primary px-2 py-1 fw-bold fs-6">
-                            {{ b.bId }}
-                        </span>
-                        <span class="text-muted">({{ b.busType }} • {{ b.driver }} 司機)</span>
-                    {% endfor %}
-                {% else %}
-                    <span class="text-muted">目前暫無即時發車車輛</span>
-                {% endif %}
-            </div>
-            <div class="text-secondary">
-                票價計費：<span class="fw-semibold text-dark">{{ route.fare or '一段票 12 元' }}</span>
-            </div>
-        </div>
+
 
         <!-- 去程 / 返程 方向切換標籤與刷新控制 -->
         <div class="mt-3 pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -121,7 +100,7 @@
 
                 <div class="alert alert-light border small text-muted py-2 px-3 mb-3 d-flex align-items-center gap-2">
                     <i class="bi bi-info-circle text-primary"></i>
-                    <span>點擊站牌可在右側地圖精確定位，點擊星星可個別收藏站點。</span>
+                    <span>點擊右側星號可將喜愛的公車站點加入收藏清單。</span>
                 </div>
 
                 {% if stations %}
@@ -135,9 +114,8 @@
                                 {% endif %}
                             {% endfor %}
 
-                            <div class="timeline-item clickable-station {% if ns.bus_here %}active-bus{% endif %}" 
-                                 id="station-item-{{ s.stationId }}"
-                                 onclick="focusStationOnMap({{ s.sLatitude }}, {{ s.sLongitude }}, '{{ s.sName }}', {{ loop.index }})">
+                            <div class="timeline-item {% if ns.bus_here %}active-bus{% endif %}" 
+                                 id="station-item-{{ s.stationId }}">
                                 <div class="timeline-dot"></div>
                                 <div class="d-flex justify-content-between align-items-start gap-2">
                                     <div class="flex-grow-1">
@@ -158,8 +136,7 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <i class="bi bi-bus-front-fill text-warning-emphasis fs-5"></i>
                                                     <div>
-                                                        <span class="badge bg-dark text-white px-2 py-1 fw-bold fs-6 me-1">{{ ns.bus_here.bId }}</span>
-                                                        <span class="text-secondary">({{ ns.bus_here.driver }} 司機)</span>
+                                                        <span class="badge bg-dark text-white px-2 py-1 fw-bold fs-6">{{ ns.bus_here.bId }}</span>
                                                     </div>
                                                 </div>
                                                 <span class="badge bg-warning text-dark border border-warning fw-semibold">
@@ -202,43 +179,9 @@
             </div>
         </div>
 
-        <!-- 右側：互動式即時地圖 (展示站點、公車即時位置、車號) 與 今日排班班次時刻表 -->
+        <!-- 右側：今日排班班次時刻表 -->
         <div class="col-lg-7">
-            <!-- 1. Leaflet 互動式即時動態地圖模板 -->
-            <div class="bg-white p-4 rounded-2 shadow-sm border mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                        <i class="bi bi-map-fill text-primary"></i>
-                        <span>即時公車位置與行車軌跡</span>
-                    </h5>
-                    <div class="small text-muted d-flex align-items-center gap-3">
-                        <span><span class="badge bg-primary p-1 me-1"> </span>站牌標記</span>
-                        <span><span class="badge bg-warning text-dark p-1 me-1"> </span>即時公車</span>
-                    </div>
-                </div>
-
-                <!-- 地圖 DOM 容器 -->
-                <div id="bus-map"></div>
-
-                <!-- 地圖下方狀態與公車車號摘要 -->
-                <div class="mt-3 p-3 bg-light rounded-2 border d-flex flex-wrap justify-content-between align-items-center gap-2 small text-secondary">
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <i class="bi bi-broadcast text-success fs-6"></i>
-                        <span>線上行駛公車：<strong class="text-dark">{{ buses | length }}</strong> 輛</span>
-                        {% for b in buses %}
-                            <button type="button" class="btn btn-xs btn-outline-dark py-0 px-2 rounded-1 fw-bold"
-                                    onclick="focusBusOnMap({{ b.lLatitude or b.latitude }}, {{ b.lLongitude or b.longitude }}, '{{ b.bId }}')">
-                                <i class="bi bi-geo-alt-fill text-warning me-1"></i>定位車號：{{ b.bId }}
-                            </button>
-                        {% endfor %}
-                    </div>
-                    <div>
-                        <span>GPS 最新定位：<span id="last-update-time" class="fw-bold text-dark">{{ buses[0].recordDatetime if buses else '即時連線' }}</span></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. 今日排班發車時刻表模板 (班次、預定發車、公車車號、車型、司機、狀態) -->
+            <!-- 今日排班發車時刻表模板 (班次、預定發車、公車車號、車型、狀態) -->
             <div class="bg-white p-4 rounded-2 shadow-sm border">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                     <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
@@ -258,7 +201,6 @@
                                 <th>預定發車</th>
                                 <th>公車車號</th>
                                 <th>公車車型</th>
-                                <th>配班司機</th>
                                 <th>行駛狀態</th>
                             </tr>
                         </thead>
@@ -278,9 +220,6 @@
                                             {% endif %}
                                         </td>
                                         <td class="small text-secondary">{{ t.busType }}</td>
-                                        <td>
-                                            <i class="bi bi-person-badge text-muted me-1"></i>{{ t.driver }}
-                                        </td>
                                         <td>
                                             {% if t.status == '行駛中' %}
                                                 <span class="badge bg-success-subtle text-success border border-success-subtle">
@@ -304,7 +243,7 @@
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
+                                    <td colspan="5" class="text-center text-muted py-4">
                                         <i class="bi bi-calendar2-x me-1"></i>今日排班班次載入中（待後端資料庫串接）
                                     </td>
                                 </tr>
@@ -334,15 +273,18 @@
     let routePolyline = null;
 
     document.addEventListener("DOMContentLoaded", function () {
-        initMap();
-        // 每 15 秒輪詢最新公車 GPS 動態
-        setInterval(refreshLiveData, 15000);
+        if (document.getElementById('bus-map')) {
+            initMap();
+            setInterval(refreshLiveData, 15000);
+        }
     });
 
     /**
      * 初始化 Leaflet 地圖與圖層
      */
     function initMap() {
+        const mapContainer = document.getElementById('bus-map');
+        if (!mapContainer) return;
         if (!stationsData || stationsData.length === 0) return;
 
         // 以第一個站點為中心，預設高雄市中心
@@ -439,7 +381,6 @@
                             <span class="badge bg-warning text-dark mb-1">公車即時行駛中</span><br>
                             <h6 class="fw-bold mb-1 text-dark">車號：<span class="badge bg-dark text-white">${b.bId}</span></h6>
                             <div class="small text-secondary">車型：${b.busType}</div>
-                            <div class="small text-secondary">駕駛：${b.driver} 司機</div>
                             <div class="small text-secondary">車速：${b.speed || '35 km/h'}</div>
                             <div class="small text-muted mt-1 border-top pt-1">最新定位時間：${b.recordDatetime || '剛才'}</div>
                         </div>
