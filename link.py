@@ -3,6 +3,8 @@ import os
 import psycopg2
 from dotenv import load_dotenv
 
+from api import sql as queries
+
 load_dotenv()  # 從 .env 讀取連線資訊
 
 DB_CONFIG = {
@@ -27,7 +29,7 @@ if __name__ == '__main__':
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute('SELECT version();')
+            cur.execute(queries.SERVER_VERSION)
             print('連線成功：', cur.fetchone()[0])
     finally:
         conn.close()

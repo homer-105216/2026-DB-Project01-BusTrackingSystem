@@ -33,26 +33,14 @@
                         <label class="form-label fw-semibold text-dark small">登入密碼</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
-                            <input type="password" name="password" id="login-password" class="form-control" placeholder="請輸入密碼" required minlength="6">
-                            <div class="invalid-feedback">請輸入密碼（至少 6 碼）！</div>
+                            <input type="password" name="password" id="login-password" class="form-control" placeholder="請輸入密碼" required>
+                            <div class="invalid-feedback">請輸入密碼！</div>
                         </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100 py-2 rounded-2 fw-bold shadow-sm mb-3">
                         登入帳號
                     </button>
-
-                    <!-- 快速填入測試帳號輔助鈕 (方便前端展示) -->
-                    <div class="p-3 bg-light rounded-2 small text-muted mb-3 border">
-                        <div class="fw-semibold text-dark mb-1">
-                            <i class="bi bi-lightbulb-fill text-warning me-1"></i>測試示範帳號：
-                        </div>
-                        <div>帳號：<code>demo_user</code></div>
-                        <div>密碼：<code>password123</code></div>
-                        <button type="button" class="btn btn-link btn-sm p-0 text-primary mt-1" onclick="fillDemoUser()">
-                            一鍵帶入示範帳號
-                        </button>
-                    </div>
 
                     <div class="text-center small text-secondary">
                         還沒有會員帳號？
@@ -66,15 +54,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    function fillDemoUser() {
-        const idInput = document.getElementById('login-identifier');
-        const pwdInput = document.getElementById('login-password');
-        if (idInput) idInput.value = 'demo_user';
-        if (pwdInput) pwdInput.value = 'password123';
-    }
-</script>
 {% endblock %}

@@ -5,9 +5,15 @@ import csv
 import os
 from getpass import getpass
 import random
+import sys
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
+
+if __name__ == '__main__' and not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from api import sql as queries
 
 SEED = 20261103
 START_DATE = date(2026, 10, 28)
@@ -184,33 +190,28 @@ def import_data(initialize=False):
     conn = connect()
     try:
         with conn.cursor() as cur:
-            cur.execute("SET LOCAL search_path TO public")
+            cur.execute(queries.PUBLIC_SEARCH_PATH)
             if initialize:
-                cur.execute("""
-                    SELECT EXISTS (
-                        SELECT FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-                        WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p', 'f', 'v', 'm')
-                    )
-                """)
+                cur.execute(queries.HAS_PUBLIC_RELATIONS)
                 if cur.fetchone()[0]:
                     raise RuntimeError('初始化需要空白資料庫，請改用新資料庫')
                 sql = Path(__file__).with_name('create_tables.sql').read_text(encoding='utf-8-sig')
                 ddl = sql.split('BEGIN;', 1)[1].rsplit('COMMIT;', 1)[0]
                 cur.execute(ddl)
             tables = ', '.join('public.' + q(name) for name in ORDER)
-            cur.execute(f'LOCK TABLE {tables} IN SHARE ROW EXCLUSIVE MODE')
+            cur.execute(queries.LOCK_IMPORT_TABLES.format(tables=tables))
             # Check exact columns and existence; reject any unexpected schema differences.
             for name, expected in SCHEMA.items():
-                cur.execute('SELECT column_name FROM information_schema.columns WHERE table_schema=%s AND table_name=%s ORDER BY ordinal_position',('public',name))
+                cur.execute(queries.LIST_TABLE_COLUMNS,('public',name))
                 found = [x[0] for x in cur.fetchall()]
                 if found != expected: raise RuntimeError(f'{name} 欄位不符合原始規格：{found} != {expected}')
-                cur.execute(f'SELECT COUNT(*) FROM public.{q(name)}')
+                cur.execute(queries.COUNT_TABLE_ROWS.format(table=q(name)))
                 count = cur.fetchone()[0]
                 if count: raise RuntimeError(f'安全中止：{name} 已有 {count} 筆資料，不會清空或重複匯入')
             for name, cols in SCHEMA.items():
                 path = OUT/(name+'.csv')
                 with path.open('r',encoding='utf-8-sig',newline='') as f:
-                    cur.copy_expert(f'COPY public.{q(name)} ({", ".join(map(q,cols))}) FROM STDIN WITH (FORMAT CSV, HEADER TRUE)',f)
+                    cur.copy_expert(queries.COPY_TABLE_ROWS.format(table=q(name), columns=", ".join(map(q, cols))),f)
                 print('匯入：',name)
         conn.commit()
         print('全部匯入成功，已 COMMIT。')
@@ -225,7 +226,7 @@ def check():
     try:
         with conn.cursor() as cur:
             for name in ORDER:
-                cur.execute(f'SELECT COUNT(*) FROM public.{q(name)}')
+                cur.execute(queries.COUNT_TABLE_ROWS.format(table=q(name)))
                 print(f'{name:24s} {cur.fetchone()[0]:>5} 筆')
     finally: conn.close()
 

@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 
+from api import sql as queries
 from link import get_connection
 
 # API Blueprint，網址前綴為 /api，一律回傳 JSON
@@ -13,7 +14,7 @@ def health():
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute('SELECT current_database(), version();')
+                cur.execute(queries.DATABASE_HEALTH)
                 database, version = cur.fetchone()
         finally:
             conn.close()

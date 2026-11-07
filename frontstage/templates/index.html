@@ -3,30 +3,12 @@
 {% block title %}首頁 - 高雄公車即時動態{% endblock %}
 
 {% block content %}
-{# 前端預設高雄公車資料 #}
-{% set default_routes = [
-    {'routeId': 'R100', 'routeName': '100', 'subName': '百貨幹線', 'origin': '瑞豐站', 'destination': '高雄車站'},
-    {'routeId': 'R205', 'routeName': '205', 'subName': '中華幹線', 'origin': '加昌站', 'destination': '夢時代'},
-    {'routeId': 'R168E', 'routeName': '168東', 'subName': '環狀幹線', 'origin': '金獅湖站', 'destination': '金獅湖站'},
-    {'routeId': 'R50', 'routeName': '50', 'subName': '五福幹線', 'origin': '建軍站(衛武營)', 'destination': '鼓山輪渡站'},
-    {'routeId': 'R-RD30', 'routeName': '紅30', 'subName': '接駁公車', 'origin': '澄清湖棒球場', 'destination': '高雄車站'}
-] %}
-{% set routes = routes or default_routes %}
-
-{% set default_stations = [
-    {'stationId': 'S106', 'sName': '高雄車站(中山路)', 'address': '高雄市三民區建國二路318號', 'routes': [{'routeId': 'R100', 'routeName': '100'}, {'routeId': 'R205', 'routeName': '205'}, {'routeId': 'R-RD30', 'routeName': '紅30'}]},
-    {'stationId': 'S105', 'sName': '捷運美麗島站', 'address': '高雄市新興區中山一路', 'routes': [{'routeId': 'R100', 'routeName': '100'}]},
-    {'stationId': 'S104', 'sName': '新堀江(中央公園)', 'address': '高雄市新興區中山二路', 'routes': [{'routeId': 'R100', 'routeName': '100'}, {'routeId': 'R205', 'routeName': '205'}]},
-    {'stationId': 'S103', 'sName': '捷運三多商圈站', 'address': '高雄市苓雅區中山二路', 'routes': [{'routeId': 'R100', 'routeName': '100'}]}
-] %}
-{% set nearby_stations = nearby_stations or default_stations %}
-
 <div class="container mt-4">
 
     <!-- 1. 簡約公車搜尋區塊 -->
     <div class="bg-white p-4 p-md-5 rounded-2 shadow-sm mb-4 border text-center">
         <h3 class="fw-bold text-dark mb-2">高雄公車動態查詢</h3>
-        <p class="text-secondary small mb-4">輸入路線號碼，直接查看即時到站時間與路線圖</p>
+        <p class="text-secondary small mb-4">輸入路線名稱或起訖站，查看路線與停靠站點</p>
 
         <!-- 搜尋輸入框 -->
         <div class="mx-auto" style="max-width: 580px;">
@@ -36,7 +18,7 @@
                         <i class="bi bi-search"></i>
                     </span>
                     <input type="text" name="keyword" class="form-control border-0 ps-2" 
-                           placeholder="請輸入公車號碼 (例: 100、205)..." 
+                           placeholder="輸入路線名稱、編號或起訖站" value="{{ keyword }}"
                            list="kaohsiung-routes-list"
                            autocomplete="off" required>
                     <button class="btn btn-primary px-4 fw-semibold" type="submit">
@@ -76,7 +58,7 @@
                         <i class="bi bi-signpost-2 text-primary"></i>
                         <span>主要公車路線</span>
                     </h5>
-                    <span class="text-muted small">點擊查看動態</span>
+                    <span class="text-muted small">點擊查看站點</span>
                 </div>
 
                 <div class="list-group list-group-flush">
@@ -93,18 +75,20 @@
                                         <i class="bi bi-arrow-right mx-1 text-muted small"></i>
                                         {{ r.destination }}
                                     </div>
-                                    <small class="text-secondary">{{ r.subName }}</small>
+                                    <small class="text-secondary"></small>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <button type="button" class="btn-fav {% if favorite_route_ids and r.routeId in favorite_route_ids %}active{% endif %}" 
-                                        onclick="event.preventDefault(); toggleFavorite('route', '{{ r.routeId }}', this)" 
+                                        data-favorite-id="{{ r.routeId }}" onclick="event.preventDefault(); toggleFavorite('route', this.dataset.favoriteId, this)"
                                         title="收藏路線">
                                     <i class="bi {% if favorite_route_ids and r.routeId in favorite_route_ids %}bi-star-fill text-warning{% else %}bi-star{% endif %} fs-5"></i>
                                 </button>
                                 <i class="bi bi-chevron-right text-muted"></i>
                             </div>
                         </a>
+                    {% else %}
+                        <p class="text-muted py-3">查無符合的路線。</p>
                     {% endfor %}
                 </div>
             </div>
@@ -118,11 +102,12 @@
                         <i class="bi bi-geo-alt text-danger"></i>
                         <span>附近公車站牌</span>
                     </h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-3" onclick="useCurrentLocation()">
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-3" id="btn-get-location" onclick="useCurrentLocation()">
                         <i class="bi bi-crosshair me-1"></i>定位
                     </button>
                 </div>
 
+                <p id="location-status-text" class="text-muted small">預設顯示高雄車站附近站牌</p>
                 <div class="list-group list-group-flush" id="nearby-stations-container">
                     {% for s in nearby_stations %}
                         <div class="list-group-item py-3 px-2 border-bottom">
@@ -131,7 +116,7 @@
                                     <i class="bi bi-pin-map-fill text-danger me-1"></i>{{ s.sName }}
                                 </div>
                                 <button type="button" class="btn-fav {% if favorite_station_ids and s.stationId in favorite_station_ids %}active{% endif %}" 
-                                        onclick="toggleFavorite('station', '{{ s.stationId }}', this)" 
+                                        data-favorite-id="{{ s.stationId }}" onclick="toggleFavorite('station', this.dataset.favoriteId, this)"
                                         title="收藏站點">
                                     <i class="bi {% if favorite_station_ids and s.stationId in favorite_station_ids %}bi-star-fill text-warning{% else %}bi-star{% endif %} fs-5"></i>
                                 </button>
@@ -147,6 +132,8 @@
                                 {% endfor %}
                             </div>
                         </div>
+                    {% else %}
+                        <p class="text-muted py-3">暫無可顯示的站牌。</p>
                     {% endfor %}
                 </div>
             </div>

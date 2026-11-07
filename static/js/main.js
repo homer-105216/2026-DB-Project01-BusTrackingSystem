@@ -16,7 +16,7 @@ let countdownInterval = null;
  * @param {string} nextUrl - 登入後要回傳的目的地網址
  */
 function requireLoginPrompt(desc = '收藏公車路線與站點為會員專屬功能，請先登入帳號後再進行操作！', nextUrl = null) {
-    const targetUrl = nextUrl || window.location.href;
+    const targetUrl = nextUrl || window.location.pathname + window.location.search;
     const loginUrl = `${window.LOGIN_URL || '/login'}?next=${encodeURIComponent(targetUrl)}`;
 
     const descEl = document.getElementById('loginModalDesc');
@@ -69,52 +69,38 @@ function cancelAutoRedirect() {
  * @param {HTMLElement} btn - 按鈕元素
  */
 async function toggleFavorite(type, id, btn) {
-    // 檢查全域登入狀態 (後端 session 或 前端展示標記)
-    const isLoggedIn = (typeof window.IS_LOGGED_IN !== 'undefined') ? window.IS_LOGGED_IN : false;
-
-    if (!isLoggedIn) {
-        requireLoginPrompt('收藏公車路線與站點為會員專屬功能，請先登入帳號！', window.location.href);
+    if (!window.IS_LOGGED_IN) {
+        requireLoginPrompt();
         return;
     }
-
-    // 若已登入，執行前端收藏切換與 Toast 提示
-    const isCurrentlyFav = btn.classList.contains('active');
-    const newStatus = !isCurrentlyFav;
-
-    if (newStatus) {
-        btn.classList.add('active');
-        const icon = btn.querySelector('i');
-        const label = btn.querySelector('.fav-label');
-        if (icon) {
-            icon.classList.remove('bi-star', 'text-muted');
-            icon.classList.add('bi-star-fill', 'text-warning');
-        }
-        if (label) label.innerText = '已收藏路線';
-        showToast(type === 'route' ? '已成功收藏該高雄公車路線！' : '已成功收藏該公車站牌！');
-    } else {
-        btn.classList.remove('active');
-        const icon = btn.querySelector('i');
-        const label = btn.querySelector('.fav-label');
-        if (icon) {
-            icon.classList.remove('bi-star-fill', 'text-warning');
-            icon.classList.add('bi-star', 'text-muted');
-        }
-        if (label) label.innerText = '收藏路線';
-        showToast(type === 'route' ? '已取消收藏路線' : '已取消收藏站點');
-    }
-
-    // 嘗試通知後端 API (更新 Session 或 資料庫)
+    btn.disabled = true;
     try {
-        const res = await fetch(`/api/favorite/${type}/${id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
+        const res = await fetch(`/api/favorite/${type}/${encodeURIComponent(id)}`, {method: 'POST'});
         const data = await res.json();
-        if (data && data.require_login) {
-            requireLoginPrompt(data.message, window.location.href);
+        if (data.require_login) {
+            requireLoginPrompt(data.message);
+            return;
         }
-    } catch (e) {
-        // 純前端模式，忽略後端連線異常
+        if (!res.ok || !data.success) {
+            showToast(data.message || '暫時無法更新收藏', true);
+            return;
+        }
+        const active = data.action === 'added';
+        btn.classList.toggle('active', active);
+        const icon = btn.querySelector('i');
+        const label = btn.querySelector('.fav-label');
+        if (icon) {
+            icon.classList.toggle('bi-star', !active);
+            icon.classList.toggle('bi-star-fill', active);
+            icon.classList.toggle('text-warning', active);
+            icon.classList.toggle('text-muted', !active);
+        }
+        if (label) label.innerText = active ? '已收藏路線' : '收藏路線';
+        showToast(data.message);
+    } catch (error) {
+        showToast('暫時無法更新收藏', true);
+    } finally {
+        btn.disabled = false;
     }
 }
 
@@ -211,7 +197,7 @@ function initFormValidations() {
                 idInput.classList.remove('is-invalid');
             }
 
-            if (!pwdInput.value || pwdInput.value.length < 6) {
+            if (!pwdInput.value) {
                 pwdInput.classList.add('is-invalid');
                 isValid = false;
             } else {
@@ -311,9 +297,11 @@ function useCurrentLocation() {
                 const data = await res.json();
                 if (data.success && data.stations) {
                     renderNearbyStations(data.stations);
+                } else if (statusText) {
+                    statusText.innerText = '無法載入附近站牌，保留原有結果。';
                 }
             } catch (e) {
-                // 若 API 尚未實作，保持高雄預設站點
+                if (statusText) statusText.innerText = '無法載入附近站牌，保留原有結果。';
             } finally {
                 if (locBtn) locBtn.disabled = false;
             }
@@ -339,40 +327,31 @@ function renderNearbyStations(stations) {
         return;
     }
 
-    let html = '';
-    stations.forEach(s => {
-        let routesHtml = '';
-        if (s.routes && s.routes.length > 0) {
-            routesHtml = s.routes.map(r => `
-                <a href="/route/${r.routeId}" class="badge bg-light text-dark border text-decoration-none">
-                    ${r.routeName}
-                </a>
-            `).join(' ');
-        } else {
-            routesHtml = '<span class="text-muted small">暫無路線</span>';
-        }
-
-        html += `
-            <div class="list-group-item py-3 px-2 border-bottom">
-                <div class="d-flex justify-content-between align-items-start mb-1">
-                    <div class="fw-bold text-dark">
-                        <i class="bi bi-pin-map-fill text-danger me-1"></i>${s.sName}
-                        ${s.distanceKm ? `<span class="badge bg-light text-secondary border small ms-1">約 ${s.distanceKm} km</span>` : ''}
-                    </div>
-                    <button type="button" class="btn-fav" 
-                            onclick="toggleFavorite('station', '${s.stationId}', this)" 
-                            title="收藏站點">
-                        <i class="bi bi-star fs-5"></i>
-                    </button>
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[char]));
+    container.innerHTML = stations.map(s => `
+        <div class="list-group-item py-3 px-2 border-bottom">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+                <div class="fw-bold text-dark">
+                    <i class="bi bi-pin-map-fill text-danger me-1"></i>${escapeHtml(s.sName)}
                 </div>
-                <div class="text-secondary small mb-2 text-truncate">${s.address || '高雄市公車站牌'}</div>
-                <div class="d-flex flex-wrap gap-1 align-items-center">
-                    <span class="text-muted small me-1">行經：</span>
-                    ${routesHtml}
-                </div>
+                <button type="button" class="btn-fav ${s.favorite ? 'active' : ''}"
+                        data-favorite-id="${escapeHtml(s.stationId)}"
+                        onclick="toggleFavorite('station', this.dataset.favoriteId, this)" title="收藏站點">
+                    <i class="bi ${s.favorite ? 'bi-star-fill text-warning' : 'bi-star'} fs-5"></i>
+                </button>
             </div>
-        `;
-    });
-
-    container.innerHTML = html;
+            <div class="text-secondary small mb-2 text-truncate">${escapeHtml(s.address)}</div>
+            <div class="d-flex flex-wrap gap-1 align-items-center">
+                <span class="text-muted small me-1">行經：</span>
+                ${s.routes.map(r => `
+                    <a href="/route/${encodeURIComponent(r.routeId)}"
+                       class="badge bg-light text-dark border text-decoration-none">
+                        ${escapeHtml(r.routeName)}
+                    </a>
+                `).join(' ')}
+            </div>
+        </div>
+    `).join('');
 }
