@@ -2,9 +2,11 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
+from werkzeug.serving import is_running_from_reloader
 
 from api.api import api_bp
 from backstage.views.backstage import backstage_bp
+from database.location_replay import location_replay
 from frontstage.views.frontstage import frontstage_bp
 
 load_dotenv()
@@ -18,4 +20,5 @@ app.register_blueprint(backstage_bp, url_prefix='/backstage')   # 後台：管�
 app.register_blueprint(api_bp, url_prefix='/api')               # API：回傳 JSON 給前端 JavaScript
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    with location_replay(app.logger, enabled=is_running_from_reloader()):
+        app.run(debug=True, use_reloader=True)
