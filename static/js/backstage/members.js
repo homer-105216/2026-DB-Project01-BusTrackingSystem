@@ -1,6 +1,6 @@
 // 會員管理介面。目前只操作示範會員，未與前台註冊／登入資料庫串接。
-let memberQuery = '', memberRole = '', editingMemberId = null;
-const isMemberAdmin = member => member.admin === true || member.admin === 'true';
+let memberQuery = '', editingMemberId = null;
+const isMemberAdmin = member => ['admin', true, 'true', 1, '1'].includes(member.admin);
 const memberRoleName = member => isMemberAdmin(member) ? '管理者' : '一般會員';
 
 function memberFavorites(memberId, kind) {
@@ -12,15 +12,13 @@ function memberFavorites(memberId, kind) {
 }
 
 function renderMembers() {
+    const members = db.members.filter(m => !isMemberAdmin(m));
     el('member-summary').innerHTML = cards([
-        ['註冊會員', db.members.length, '目前示範會員總數'],
-        ['一般會員', db.members.filter(m => !isMemberAdmin(m)).length, '一般乘客帳號'],
-        ['管理者', db.members.filter(isMemberAdmin).length, '管理者帳號'],
-        ['有收藏的會員', db.members.filter(m => memberFavorites(m.mId, 'routes').length || memberFavorites(m.mId, 'stations').length).length, '至少收藏一條路線或一個站點']
+        ['註冊會員', members.length, '一般會員總數，不含管理者'],
+        ['有收藏的會員', members.filter(m => memberFavorites(m.mId, 'routes').length || memberFavorites(m.mId, 'stations').length).length, '至少收藏一條路線或一個站點，不含管理者']
     ]);
-    const rows = db.members.filter(m =>
-        (!memberQuery || [m.mId, m.userName, m.email].some(v => String(v ?? '').toLowerCase().includes(memberQuery.toLowerCase()))) &&
-        (!memberRole || (memberRole === 'admin') === isMemberAdmin(m)));
+    const rows = members.filter(m => !memberQuery ||
+        [m.mId, m.userName, m.email].some(v => String(v ?? '').toLowerCase().includes(memberQuery.toLowerCase())));
     el('member-table').innerHTML = `<table><thead><tr>
         <th scope="col">會員編號</th><th scope="col">會員名稱</th><th scope="col">Email</th>
         <th scope="col">註冊時間</th><th scope="col">角色</th><th scope="col">操作</th>
@@ -31,7 +29,7 @@ function renderMembers() {
             <button data-member-edit="${esc(m.mId)}">編輯</button>
             <button class="danger" data-member-delete="${esc(m.mId)}">刪除</button></td></tr>`).join('')}
         </tbody></table>${rows.length ? '' : '<div class="empty">沒有符合條件的會員。</div>'}`;
-    el('member-total').textContent = `顯示 ${rows.length} 筆 / 共 ${db.members.length} 筆`;
+    el('member-total').textContent = `顯示 ${rows.length} 筆 / 共 ${members.length} 筆`;
 }
 
 function showMember(member) {
@@ -63,22 +61,21 @@ function editMember(member) {
 
 el('section-name').textContent = 'CMS / 資料管理';
 el('title').textContent = '會員管理';
-el('description').textContent = configs.members.desc;
+el('description').textContent = '管理一般會員的基本資料與收藏；管理者帳號不列入。';
 el('add').hidden = true;
 el('content').innerHTML = `<p class="member-note">此頁目前為示範會員資料，尚未連接前台註冊帳號。正式串接後會讀取 Member 資料表。</p>
-    <div id="member-summary"></div><div class="panel"><div class="toolbar">
+    <div id="member-summary" class="user-stat-cards"></div><div class="panel"><div class="toolbar">
         <input id="member-search" type="search" aria-label="搜尋會員" placeholder="搜尋會員編號、名稱或 Email…">
-        <select id="member-role" aria-label="篩選會員角色"><option value="">所有角色</option><option value="member">一般會員</option><option value="admin">管理者</option></select>
+
     </div><div class="table-wrap" id="member-table"></div><div class="foot"><span id="member-total"></span><span>示範資料 · 本機儲存</span></div></div>`;
 el('member-search').oninput = e => { memberQuery = e.target.value.trim(); renderMembers(); };
-el('member-role').onchange = e => { memberRole = e.target.value; renderMembers(); };
 el('close-member-details').onclick = () => el('member-details').close();
 el('cancel').onclick = () => el('editor').close();
 
 el('member-table').onclick = e => {
     const button = e.target.closest('button'); if (!button) return;
     const id = button.dataset.memberView ?? button.dataset.memberEdit ?? button.dataset.memberDelete;
-    const member = db.members.find(m => String(m.mId) === id); if (!member) return;
+    const member = db.members.find(m => String(m.mId) === id); if (!member || isMemberAdmin(member)) return;
     if (button.hasAttribute('data-member-view')) { showMember(member); return; }
     if (button.hasAttribute('data-member-edit')) { editMember(member); return; }
     if (!confirm(`確定刪除示範會員「${member.userName}」及其收藏？此操作不影響前台真實帳號。`)) return;
