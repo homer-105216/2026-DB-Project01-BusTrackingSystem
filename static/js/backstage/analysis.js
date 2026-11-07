@@ -45,10 +45,38 @@ function registrationChart(rows){
         </svg>`;
 }
 
+// 固定班表比較：不使用每日派車資料，也不受註冊日期篩選影響。
+function routeTripComparison(routes,trips){
+    return routes.map(route=>{
+        const routeTrips=trips.filter(t=>t.routeId===route.routeId);
+        const outbound=routeTrips.filter(t=>t.tDirection==='去程').length;
+        const inbound=routeTrips.filter(t=>t.tDirection==='返程').length;
+        return {id:route.routeId,name:route.routeName,outbound,inbound,total:outbound+inbound};
+    });
+}
+
+function renderTripComparison(){
+    const order=el('trip-comparison-order').value;
+    const rows=routeTripComparison(db.routes,db.trips).sort((a,b)=>
+        (order==='most'?b.total-a.total:order==='least'?a.total-b.total:0)||a.id.localeCompare(b.id));
+    if(!rows.length){
+        el('trip-comparison-chart').innerHTML='<div class="empty">尚無路線資料，請先到路線管理新增路線。</div>';
+        el('trip-comparison-table').innerHTML='';return;
+    }
+    const max=Math.max(1,...rows.flatMap(r=>[r.outbound,r.inbound]));
+    el('trip-comparison-chart').innerHTML=rows.map(row=>`<div class="trip-compare-row">
+        <div class="trip-compare-name"><strong>${esc(row.name)}</strong><small>${esc(row.id)} · 合計 ${row.total} 班</small></div>
+        <div class="trip-compare-bars">${[['去程',row.outbound,'outbound'],['返程',row.inbound,'inbound']].map(([label,count,kind])=>`
+            <div class="trip-compare-series"><span>${label}</span><div class="bar-track" role="img" aria-label="${esc(row.name)}${label}：${count} 班">
+                <div class="bar ${kind}" style="width:${count/max*100}%"></div></div><strong>${count} 班</strong></div>`).join('')}
+        </div></div>`).join('');
+    el('trip-comparison-table').innerHTML='<table><thead><tr><th scope="col">路線</th><th scope="col">去程班次</th><th scope="col">返程班次</th><th scope="col">合計</th></tr></thead><tbody>'+rows.map(row=>`<tr><td>${esc(row.id)} · ${esc(row.name)}</td><td>${row.outbound}</td><td>${row.inbound}</td><td>${row.total}</td></tr>`).join('')+'</tbody></table>';
+}
+
 if(page==='analysis'){
     el('section-name').textContent='ANALYSIS / 統計分析';
     el('title').textContent='營運統計分析';
-    el('description').textContent='查看使用者註冊成長，以及熱門收藏路線與站點。';
+    el('description').textContent='查看使用者註冊成長、各路線預定班次，以及熱門收藏路線與站點。';
     el('content').innerHTML=`
         <div class="toolbar"><label>使用者統計期間<select id="user-period"><option value="7">近 7 天</option><option value="30" selected>近 30 天</option><option value="90">近 90 天</option></select></label>
             <span class="count">含今天；使用者總數不受期間篩選影響，所有使用者統計皆排除管理者。</span></div>
@@ -57,11 +85,19 @@ if(page==='analysis'){
             <div id="registration-chart"></div><p id="registration-empty" class="count"></p>
             <details class="registration-data"><summary>查看每日數據</summary><div class="table-wrap" id="registration-table"></div></details>
         </section>
+        <section class="panel trip-comparison-panel"><h2>各路線去返程預定班次比較</h2>
+            <p class="count">依目前預定班次計算，非當日實際發車數；不受上方使用者統計期間影響。班次少不一定代表服務不足。</p>
+            <div class="toolbar trip-comparison-toolbar"><label>排列方式<select id="trip-comparison-order">
+                <option value="least">班次由少到多</option><option value="most">班次由多到少</option><option value="id">依路線編號</option></select></label>
+                <div class="trip-comparison-legend"><span><i class="outbound"></i>去程</span><span><i class="inbound"></i>返程</span></div></div>
+            <div id="trip-comparison-chart"></div>
+            <details class="registration-data"><summary>查看班次數據</summary><div class="table-wrap" id="trip-comparison-table"></div></details>
+        </section>
         <div class="toolbar"><label>收藏排行<select id="rank-limit"><option value="5">前 5 名</option><option value="10">前 10 名</option><option value="all">全部</option></select></label>
             <span class="count">收藏排行統計目前全部收藏，不受上方註冊期間影響；同一使用者對同一項目只計一次。</span></div>
         <div class="favorite-charts"><section class="panel"><h2>熱門收藏路線</h2><div id="favorite-route-chart"></div></section>
             <section class="panel"><h2>熱門收藏站點</h2><div id="favorite-station-chart"></div></section></div>
-        <p class="favorite-note">此頁使用示範會員與收藏資料，尚未串接正式註冊帳號。註冊統計以目前保留的會員資料計算；已刪除會員不計入。收藏人數相同時依編號排序。</p>`;
+        <p class="favorite-note">此頁使用示範會員、預定班次與收藏資料，尚未串接正式註冊帳號。註冊統計以目前保留的會員資料計算；已刪除會員不計入。收藏人數相同時依編號排序。</p>`;
 
     function renderUserAnalysis(){
         const days=Number(el('user-period').value||30);
@@ -85,5 +121,6 @@ if(page==='analysis'){
     }
     el('user-period').onchange=renderUserAnalysis;
     el('rank-limit').onchange=renderFavoriteAnalysis;
-    renderUserAnalysis();renderFavoriteAnalysis();
+    el('trip-comparison-order').onchange=renderTripComparison;
+    renderUserAnalysis();renderTripComparison();renderFavoriteAnalysis();
 }
