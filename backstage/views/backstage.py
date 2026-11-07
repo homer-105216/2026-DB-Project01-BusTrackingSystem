@@ -1,15 +1,28 @@
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, abort, render_template
 
 backstage_bp = Blueprint('backstage', __name__, template_folder='../templates')
+
+PAGE_TEMPLATES = {
+    'overview': 'index',
+    'routes': 'routes',
+    'stations': 'stations',
+    'stops': 'stops',
+    'bus-types': 'bus_types',
+    'buses': 'buses',
+    'trips': 'trips',
+    'dispatch': 'dispatch',
+    'stop-times': 'stop_times',
+    'analysis': 'analysis',
+}
 
 
 @backstage_bp.route('/')
 def index():
-    return render_template('backstage/console.html', page='overview')
+    return render_template('backstage/index.html', page='overview')
 
 
 @backstage_bp.route('/<page>')
 def console(page):
-    if page not in {'routes', 'stations', 'stops', 'bus-types', 'buses', 'trips', 'dispatch', 'stop-times', 'analysis'}:
+    if page not in PAGE_TEMPLATES or page == 'overview':
         abort(404)
-    return render_template('backstage/console.html', page=page)
+    return render_template(f'backstage/{PAGE_TEMPLATES[page]}.html', page=page)
