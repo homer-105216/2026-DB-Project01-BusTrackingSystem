@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者登入 · 公車營運中心</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/backstage-login.css') }}">
+</head>
+<body>
+    <main class="login-card">
+        <div class="brand">▥ 公車營運中心</div>
+        <div class="eyebrow">GROUP 07 / 後台管理</div>
+        <h1>管理者登入</h1>
+        <p class="intro">請使用具有管理者權限的會員帳號登入。</p>
+        {% if preview_message %}<div class="preview-message" role="status">{{ preview_message }}</div>{% endif %}
+        <form method="post" action="{{ url_for('backstage.login') }}">
+            <label for="identifier">使用者名稱或 Email</label>
+            <input id="identifier" name="identifier" type="text" autocomplete="username" maxlength="254" value="{{ identifier }}" required autofocus>
+            <label for="password">密碼</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required>
+            <button type="submit">登入後台</button>
+        </form>
+        <p class="note">目前僅提供登入介面預覽，尚未串接帳號驗證；後台可直接開啟。</p>
+        <a class="return preview-backstage" href="{{ url_for('backstage.index') }}">開啟後台（開發預覽） →</a>
+        <a class="return" href="{{ url_for('frontstage.index') }}">← 返回乘客首頁</a>
+    </main>
+</body>
+</html>

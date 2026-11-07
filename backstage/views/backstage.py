@@ -1,4 +1,5 @@
-from flask import Blueprint, abort, redirect, render_template, url_for
+from flask import Blueprint, abort, redirect, render_template, request, url_for
+
 
 backstage_bp = Blueprint('backstage', __name__, template_folder='../templates')
 
@@ -15,6 +16,16 @@ PAGE_TEMPLATES = {
     'stop-times': 'stop_times',
     'analysis': 'analysis',
 }
+
+
+@backstage_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    # 介面預覽：不查詢資料庫、不建立登入狀態，也不限制後台存取。
+    message = None
+    if request.method == 'POST':
+        message = '目前尚未串接帳號驗證，請點下方「開啟後台」繼續開發。'
+    return render_template('backstage/login.html', preview_message=message,
+                           identifier=request.form.get('identifier', '').strip())
 
 
 @backstage_bp.route('/')
