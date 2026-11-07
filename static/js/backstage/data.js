@@ -3,7 +3,7 @@
 const configs={
 routes:{title:'路線管理',group:'CMS / 資料管理',desc:'維護路線名稱與起訖站，建立公車服務的基礎資料。',fields:[['routeId','路線編號'],['routeName','路線名稱'],['origin','起點'],['destination','終點']]},
 stations:{title:'站點管理',group:'CMS / 資料管理',desc:'維護站牌名稱、地址與地理座標。',fields:[['stationId','站點編號'],['sName','站點名稱'],['address','地址'],['sLatitude','緯度','number'],['sLongitude','經度','number']]},
-stops:{title:'路線站序與去返程',group:'SCHEDULE / 班表調度',desc:'先選擇路線，再查看與設定去程、返程的停靠站順序。',fields:[['routeId','路線','ref:routes:routeId:routeName'],['stationId','站點','ref:stations:stationId:sName'],['rDirection','行駛方向','select:去程,返程'],['stopSequence','站序','positive']]},
+stops:{title:'路線站序與去返程',group:'SCHEDULE / 班表調度',desc:'選擇路線與方向，管理站序，並依班次設定各站預計到離站時間。',fields:[['routeId','路線','ref:routes:routeId:routeName'],['stationId','站點','ref:stations:stationId:sName'],['rDirection','行駛方向','select:去程,返程'],['stopSequence','站序','positive']]},
 'bus-types':{title:'車型管理',group:'CMS / 資料管理',desc:'管理 Bus_Type 車型與載客容量，供車輛資料選用。',fields:[['busType','車型名稱'],['capacity','載客容量','positive']]},
 buses:{title:'車輛管理',group:'CMS / 資料管理',desc:'以車牌號碼識別車輛，每輛車選擇一種車型，容載人數由車型自動帶入。',fields:[['bId','車牌號碼'],['busType','車型','ref:bus-types:busType:busType']]},
 trips:{title:'預定班次管理',group:'SCHEDULE / 班表調度',desc:'先選擇路線，再分別管理去程與返程的預定發車班次。',fields:[['tId','班次編號'],['routeId','路線','ref:routes:routeId:routeName'],['departureTime','發車時間','time'],['tDirection','行駛方向','select:去程,返程']]},

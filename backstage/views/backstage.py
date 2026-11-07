@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, render_template
+from flask import Blueprint, abort, redirect, render_template, url_for
 
 backstage_bp = Blueprint('backstage', __name__, template_folder='../templates')
 
@@ -23,6 +23,8 @@ def index():
 
 @backstage_bp.route('/<page>')
 def console(page):
+    if page == 'stop-times':
+        return redirect(url_for('backstage.console', page='stops'))
     if page not in PAGE_TEMPLATES or page == 'overview':
         abort(404)
     return render_template(f'backstage/{PAGE_TEMPLATES[page]}.html', page=page)

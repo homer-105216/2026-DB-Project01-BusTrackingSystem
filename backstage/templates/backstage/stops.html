@@ -1,4 +1,23 @@
 {% extends 'backstage/layout.html' %}
+{% block content %}
+{{ super() }}
+<dialog id="stop-time-editor">
+    <form id="stop-time-form">
+        <h2 id="stop-time-title">設定到離站時間</h2>
+        <p id="stop-time-context"></p>
+        <div class="form-grid stop-time-fields">
+            <label>預計到站時間<input id="stop-arrival" type="time" required></label>
+            <label>預計離站時間<input id="stop-departure" type="time" required></label>
+        </div>
+        <p class="feedback" id="stop-time-error" role="alert"></p>
+        <div class="actions">
+            <button type="button" class="btn danger" id="clear-stop-time">清除時間</button>
+            <button type="button" class="btn" id="cancel-stop-time">取消</button>
+            <button type="submit" class="btn primary">儲存示範資料</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}
 {% block page_scripts %}
 <script src="{{ url_for('static', filename='js/backstage/management.js') }}"></script>
 <script src="{{ url_for('static', filename='js/backstage/stops.js') }}"></script>

@@ -8,3 +8,11 @@
 @media(max-width:700px){.route-cards{grid-template-columns:1fr}.stop-item{flex-wrap:wrap}.stop-actions{margin-left:58px}.toolbar input{min-width:0;width:100%}}
 .trip-direction{margin-top:28px}.trip-direction+.trip-direction{border-top:1px solid var(--line);padding-top:12px}.trip-caption{text-align:left;padding:10px 12px;color:var(--muted);font-size:13px}
 .favorite-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.favorite-ranking{list-style:none;padding:0;margin:12px 0}.favorite-row{display:flex;gap:14px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}.favorite-rank{width:24px;flex-shrink:0;font-weight:700;color:var(--teal)}.favorite-detail{flex:1;min-width:0}.favorite-detail strong{overflow-wrap:anywhere}.favorite-detail small{display:block;color:var(--muted);margin:5px 0 12px}.favorite-count{white-space:nowrap}.favorite-axis,.favorite-note{font-size:12px;color:var(--muted)}.favorite-note{margin-top:20px}@media(max-width:1000px){.favorite-charts{grid-template-columns:1fr}}
+
+/* 路線站序內的班次及到離站時間 */
+.stop-trip-picker{margin:22px 0;padding:16px;background:#f3f7f8;border-radius:8px}
+.stop-trip-picker label{max-width:400px}.stop-trip-picker p{font-size:13px;margin-top:9px}
+.stop-times{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+.stop-times strong{display:inline;font-size:15px;color:var(--navy);margin-left:6px}
+.stop-actions{flex-wrap:wrap;justify-content:flex-end}.stop-time-fields{margin-top:20px}
+@media(max-width:1000px){.stop-item{flex-wrap:wrap}.stop-actions{margin-left:58px}.stop-info{flex-basis:calc(100% - 58px)}}
