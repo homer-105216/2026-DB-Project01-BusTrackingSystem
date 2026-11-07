@@ -1,6 +1,7 @@
 // 後台欄位設定、示範資料與 localStorage；尚未串接 SQL。
 // 欄位對應組內關聯綱目；SQL 尚未提供，目前以瀏覽器資料展示操作。
 const configs={
+members:{title:'會員管理',group:'CMS / 資料管理',desc:'管理註冊會員的基本資料與收藏；帳號由前台註冊建立。',fields:[['mId','會員編號'],['userName','會員名稱'],['email','Email'],['registerDatetime','註冊時間'],['admin','角色']]},
 routes:{title:'路線管理',group:'CMS / 資料管理',desc:'維護路線名稱與起訖站，建立公車服務的基礎資料。',fields:[['routeId','路線編號'],['routeName','路線名稱'],['origin','起點'],['destination','終點']]},
 stations:{title:'站點管理',group:'CMS / 資料管理',desc:'維護站牌名稱、地址與地理座標。',fields:[['stationId','站點編號'],['sName','站點名稱'],['address','地址'],['sLatitude','緯度','number'],['sLongitude','經度','number']]},
 stops:{title:'路線站序與去返程',group:'SCHEDULE / 班表調度',desc:'選擇路線與方向，管理站序，並依班次設定各站預計到離站時間。',fields:[['routeId','路線','ref:routes:routeId:routeName'],['stationId','站點','ref:stations:stationId:sName'],['rDirection','行駛方向','select:去程,返程'],['stopSequence','站序','positive']]},
@@ -11,7 +12,20 @@ dispatch:{title:'每日派車與司機安排',group:'SCHEDULE / 班表調度',de
 'stop-times':{title:'各站預計到離站時間',group:'SCHEDULE / 班表調度',desc:'依班次設定各停靠站預計到站及離站時間。',fields:[['tId','班次','ref:trips:tId:tId'],['stationId','站點','ref:stations:stationId:sName'],['expArrivalTime','預計到站','time'],['expDepartureTime','預計離站','time']]}
 };
 const seeds={routes:[['R001','紅線 01','高雄車站','中山大學'],['R002','藍線 02','左營高鐵站','美麗島站']],stations:[['S001','高雄車站','高雄市三民區建國二路',22.639,120.302],['S002','美麗島站','高雄市新興區中山一路',22.631,120.301],['S003','中山大學','高雄市鼓山區蓮海路70號',22.626,120.266]],stops:[['R001','S001','去程',1],['R001','S002','去程',2],['R001','S003','去程',3],['R001','S003','返程',1],['R001','S001','返程',2]],'bus-types':[['電動低地板公車',40],['大型柴油公車',45]],buses:[['EAA-1234','電動低地板公車'],['KAB-5678','大型柴油公車']],trips:[['T001','R001','08:00','去程'],['T002','R001','09:00','返程'],['T003','R002','08:30','去程']],dispatch:[['T001','2026-11-04','王大明','已完成','EAA-1234'],['T002','2026-11-04','陳小華','未發車','EAA-1234'],['T003','2026-11-04','林志明','執行中','KAB-5678']],'stop-times':[['T001','S001','08:00','08:00'],['T001','S002','08:12','08:13'],['T001','S003','08:35','08:35']]};
-let db;try{db=JSON.parse(localStorage.getItem('bus-backstage-demo-v1'))}catch{}if(!db||!Object.keys(configs).every(k=>Array.isArray(db[k])))db=Object.fromEntries(Object.entries(seeds).map(([k,rows])=>[k,rows.map(row=>Object.fromEntries(configs[k].fields.map((f,i)=>[f[0],row[i]])))]));
+// 逐表補齊示範資料，新增會員功能時不清空既有路線、班次或時間設定。
+let db;
+try { db=JSON.parse(localStorage.getItem('bus-backstage-demo-v1')); } catch {}
+if(!db || typeof db!=='object' || Array.isArray(db)) db={};
+for(const [key,rows] of Object.entries(seeds)) {
+    if(!Array.isArray(db[key])) db[key]=rows.map(row=>Object.fromEntries(configs[key].fields.map((f,i)=>[f[0],row[i]])));
+}
+if(!Array.isArray(db.members)) db.members=[
+    {mId:'M001',userName:'王小明',email:'ming@example.com',registerDatetime:'2026-11-01 09:00:00',admin:false},
+    {mId:'M002',userName:'陳小華',email:'hua@example.com',registerDatetime:'2026-11-02 10:30:00',admin:false},
+    {mId:'M003',userName:'林怡君',email:'yi@example.com',registerDatetime:'2026-11-03 14:20:00',admin:false},
+    {mId:'M004',userName:'營運管理員',email:'admin@example.com',registerDatetime:'2026-11-01 08:00:00',admin:true},
+    {mId:'M005',userName:'張志豪',email:'hao@example.com',registerDatetime:'2026-11-04 16:45:00',admin:false}
+];
 // 升級舊版示範車牌，同步更新派車關聯；保留其他自訂資料。
 for(const [oldPlate,newPlate] of [['BUS-001','EAA-1234'],['BUS-002','KAB-5678']]){
     if(db.buses.some(b=>b.bId===oldPlate)&&!db.buses.some(b=>b.bId===newPlate)){

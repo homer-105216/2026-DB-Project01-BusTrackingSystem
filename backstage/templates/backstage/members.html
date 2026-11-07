@@ -1,0 +1,12 @@
+{% extends 'backstage/layout.html' %}
+{% block content %}
+{{ super() }}
+<dialog id="member-details" aria-labelledby="member-detail-title">
+    <h2 id="member-detail-title">會員資料</h2>
+    <div id="member-detail-body"></div>
+    <div class="actions"><button class="btn" type="button" id="close-member-details">關閉</button></div>
+</dialog>
+{% endblock %}
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/backstage/members.js') }}"></script>
+{% endblock %}

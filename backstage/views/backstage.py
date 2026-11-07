@@ -4,6 +4,7 @@ backstage_bp = Blueprint('backstage', __name__, template_folder='../templates')
 
 PAGE_TEMPLATES = {
     'overview': 'index',
+    'members': 'members',
     'routes': 'routes',
     'stations': 'stations',
     'stops': 'stops',

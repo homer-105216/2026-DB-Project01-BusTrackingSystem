@@ -16,3 +16,5 @@
 .stop-times strong{display:inline;font-size:15px;color:var(--navy);margin-left:6px}
 .stop-actions{flex-wrap:wrap;justify-content:flex-end}.stop-time-fields{margin-top:20px}
 @media(max-width:1000px){.stop-item{flex-wrap:wrap}.stop-actions{margin-left:58px}.stop-info{flex-basis:calc(100% - 58px)}}
+
+.member-note{font-size:13px;margin-bottom:20px}.member-details-list{display:grid;grid-template-columns:90px 1fr;gap:12px;margin:20px 0}.member-details-list dt{color:var(--muted);font-weight:400}.member-details-list dd{margin:0;overflow-wrap:anywhere}.member-favorites{padding-left:20px;line-height:1.9}.member-subtitle{margin-top:24px}.member-readonly{background:#f3f7f8;color:var(--muted)}
