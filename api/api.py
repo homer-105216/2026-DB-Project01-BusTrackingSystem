@@ -2,10 +2,17 @@ from flask import Blueprint, jsonify
 
 from link import get_connection
 from .routes import list_routes
+from .bus_types import list_bus_types, create_bus_type, update_bus_type, delete_bus_type
 
 # API Blueprint，網址前綴為 /api，一律回傳 JSON
 api_bp = Blueprint('api', __name__)
 api_bp.add_url_rule('/routes', endpoint='list_routes', view_func=list_routes, methods=['GET'])
+
+api_bp.add_url_rule('/bus-types', endpoint='list_bus_types', view_func=list_bus_types, methods=['GET'])
+api_bp.add_url_rule('/bus-types', endpoint='create_bus_type', view_func=create_bus_type, methods=['POST'])
+api_bp.add_url_rule('/bus-types/<path:bus_type>', endpoint='update_bus_type', view_func=update_bus_type, methods=['PATCH'])
+api_bp.add_url_rule('/bus-types/<path:bus_type>', endpoint='delete_bus_type', view_func=delete_bus_type, methods=['DELETE'])
+
 
 
 @api_bp.route('/health')
