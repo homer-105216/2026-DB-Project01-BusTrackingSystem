@@ -676,3 +676,14 @@ SELECT "tId", "date", "bId", "driver", "status"
 FROM public."Daily_Trip_Implement" WHERE "tId" = %(tId)s AND "date" = %(date)s::date
 FOR UPDATE
 """
+
+# --- 營運總覽：目前保留的資料總數，不以每日派車或示範資料代替 ------------
+# Input 無；Output routeCount, stationCount, busCount, busTypeCount, tripCount（bigint）。
+# 每張表獨立 COUNT，避免多表 JOIN 造成重複計數；空表也回傳 0。
+BACKSTAGE_OVERVIEW_COUNTS = """
+SELECT (SELECT count(*) FROM public."Route") AS "routeCount",
+       (SELECT count(*) FROM public."Station") AS "stationCount",
+       (SELECT count(*) FROM public."Bus") AS "busCount",
+       (SELECT count(*) FROM public."Bus_Type") AS "busTypeCount",
+       (SELECT count(*) FROM public."Trip") AS "tripCount"
+"""

@@ -1,4 +1,5 @@
 {% extends 'backstage/layout.html' %}
 {% block page_scripts %}
+<script>const overviewApiUrl={{ url_for('api.operation_overview')|tojson }};</script>
 <script src="{{ url_for('static', filename='js/backstage/index.js') }}"></script>
 {% endblock %}

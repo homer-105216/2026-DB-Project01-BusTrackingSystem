@@ -79,3 +79,6 @@ api_bp.add_url_rule('/schedule/dispatch/<path:trip_id>/<dispatch_date>', endpoin
 
 from .analysis import operation_analysis
 api_bp.add_url_rule('/schedule/analysis', endpoint='operation_analysis', view_func=operation_analysis, methods=['GET'])
+
+from .overview import operation_overview
+api_bp.add_url_rule('/schedule/overview', endpoint='operation_overview', view_func=operation_overview, methods=['GET'])
