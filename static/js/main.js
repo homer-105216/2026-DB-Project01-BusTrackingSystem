@@ -157,8 +157,8 @@ function initFormValidations() {
                 email.classList.add('is-valid');
             }
 
-            // 3. 驗證密碼長度 (>= 6)
-            if (!password.value || password.value.length < 6) {
+            // 3. 驗證密碼長度 (>= 8)
+            if (!password.value || password.value.length < 8) {
                 password.classList.add('is-invalid');
                 isValid = false;
             } else {
@@ -246,7 +246,7 @@ function initFormValidations() {
                     currentPwd.classList.remove('is-invalid');
                 }
 
-                if (newPwd.value.length < 6) {
+                if (newPwd.value.length < 8) {
                     newPwd.classList.add('is-invalid');
                     isValid = false;
                 } else {

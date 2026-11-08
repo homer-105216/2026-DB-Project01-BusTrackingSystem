@@ -13,7 +13,7 @@ from link import get_connection
 frontstage_bp = Blueprint('frontstage', __name__, template_folder='../templates')
 
 def fetch_rows(query, params=()):
-    with closing(get_connection()) as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with closing(get_connection()) as conn, conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(query, params)
         return cur.fetchall()
 
@@ -98,31 +98,59 @@ def nearby():
 @frontstage_bp.route('/route/<route_id>')
 def route_detail(route_id):
     direction = int(request.args.get('direction', type=int) == 1)
-    routes = get_routes()
-    route = next((r for r in routes if r['routeId'] == route_id), None)
-    if route is None:
-        abort(404)
-    stations = fetch_rows(queries.LIST_ROUTE_STOPS, (route_id, '回程' if direction else '去程'))
-    trips = fetch_rows(queries.LIST_ROUTE_TRIPS, (route_id, '回程' if direction else '去程'))
-    favorites = get_user_favorites()
+    direction_str = '回程' if direction else '去程'
+    try:
+        route_rows = fetch_rows(queries.GET_ROUTE_BY_ID, (route_id,))
+        if not route_rows:
+            abort(404)
+        route = route_rows[0]
+        stations = fetch_rows(queries.LIST_ROUTE_STOPS, (route_id, direction_str))
+        trips = fetch_rows(queries.LIST_ROUTE_TRIPS, (route_id, direction_str))
+        buses = fetch_rows(queries.LIST_ROUTE_LIVE_BUSES, (route_id, direction_str))
+        routes = get_routes()
+        favorites = get_user_favorites()
+    except (Error, RuntimeError):
+        current_app.logger.exception('路線詳情查詢失敗')
+        abort(503)
+
     return render_template(
         'route_detail.html', route=route, route_id=route_id, direction=direction,
-        stations=stations, buses=[], trips=trips, all_kaohsiung_routes=routes,
+        stations=stations, buses=buses, trips=trips, all_kaohsiung_routes=routes,
         is_fav_route=route_id in favorites['routes'], favorite_station_ids=favorites['stations'],
     )
 
 
+@frontstage_bp.route('/api/bus/live/<route_id>')
+def api_route_live(route_id):
+    direction = int(request.args.get('direction', type=int) == 1)
+    direction_str = '回程' if direction else '去程'
+    try:
+        buses = fetch_rows(queries.LIST_ROUTE_LIVE_BUSES, (route_id, direction_str))
+        return jsonify(success=True, buses=buses)
+    except (Error, RuntimeError):
+        current_app.logger.exception('即時公車動態查詢失敗')
+        return jsonify(success=False, message='暫時無法讀取公車動態', buses=[]), 503
+
+
 @frontstage_bp.route('/favorites')
 def favorites():
-    if member_id() is None:
+    mid = member_id()
+    if mid is None:
         flash('查看或管理我的收藏清單前，請先登入帳號。', 'warning')
         return redirect(url_for('frontstage.login', next=url_for('frontstage.favorites')))
-    favorites = get_user_favorites()
-    routes = get_routes()
+    try:
+        fav_routes = fetch_rows(queries.LIST_MEMBER_FAVORITE_ROUTES, (mid,))
+        fav_stations = fetch_rows(queries.LIST_MEMBER_FAVORITE_STATIONS, (mid,))
+        all_routes = get_routes()
+    except (Error, RuntimeError):
+        current_app.logger.exception('收藏清單載入失敗')
+        flash('暫時無法讀取收藏清單，請稍後再試。', 'danger')
+        fav_routes, fav_stations, all_routes = [], [], []
+
     return render_template(
-        'favorites.html', all_kaohsiung_routes=routes,
-        fav_routes=[r for r in routes if r['routeId'] in favorites['routes']],
-        fav_stations=get_stations(station_ids=favorites['stations']),
+        'favorites.html', all_kaohsiung_routes=all_routes,
+        fav_routes=fav_routes,
+        fav_stations=fav_stations,
     )
 
 
@@ -186,7 +214,6 @@ def login():
             return render_template('login.html', next=next_url)
 
         user = dict(rows[0])
-        user['registerDatetime'] = user['registerDatetime'].strftime('%Y-%m-%d %H:%M:%S')
         session.clear()
         session['user'] = user
         session['authenticated_member_id'] = user['mId']
@@ -213,42 +240,39 @@ def register():
             flash('請輸入正確的電子郵件格式！', 'danger')
             return render_template('register.html')
 
-        if not password or len(password) < 6:
-            flash('密碼長度需至少 6 個字元！', 'danger')
+        if not password or len(password) < 8:
+            flash('密碼長度需至少 8 個字元！', 'danger')
             return render_template('register.html')
 
         if password != confirm_password:
             flash('兩次輸入的密碼不一致！', 'danger')
             return render_template('register.html')
 
-        # 嘗試寫入資料庫
         try:
-            from link import get_connection
-            conn = get_connection()
-            try:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        queries.REGISTER_MEMBER,
-                        (username, email, password)
-                    )
-                    conn.commit()
-            finally:
-                conn.close()
-        except Exception:
-            pass
+            existing = fetch_rows(queries.CHECK_MEMBER_EXISTS, (email, username))
+            if existing:
+                flash('該使用者名稱或電子郵件已被註冊，請更換後再試！', 'danger')
+                return render_template('register.html')
 
-        user = {
-            'mId': 102,
-            'userName': username,
-            'email': email,
-            'registerDatetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
+            new_members = fetch_rows(queries.REGISTER_MEMBER, (username, email, password))
+            if not new_members:
+                flash('註冊失敗，請稍後再試。', 'danger')
+                return render_template('register.html')
+            user = dict(new_members[0])
+        except Error as exc:
+            current_app.logger.exception('註冊寫入資料庫失敗: %s', exc)
+            flash('註冊失敗，資料庫發生錯誤，請稍後再試。', 'danger')
+            return render_template('register.html'), 503
+        except RuntimeError:
+            current_app.logger.exception('註冊連線失敗')
+            flash('暫時無法連線至會員資料庫，請稍後再試。', 'danger')
+            return render_template('register.html'), 503
+
         session.clear()
         session['user'] = user
-        session['favorites'] = {'routes': [], 'stations': []}
-        session.modified = True
+        session['authenticated_member_id'] = user['mId']
 
-        flash(f'註冊成功！已自動登入，歡迎加入高雄公車動態追蹤系統。', 'success')
+        flash('註冊成功！已自動登入，歡迎加入高雄公車動態追蹤系統。', 'success')
         return redirect(url_for('frontstage.index'))
 
     return render_template('register.html')
@@ -265,36 +289,82 @@ def logout():
 @frontstage_bp.route('/profile', methods=['GET', 'POST'])
 def profile():
     """會員帳號設定維護"""
-    user = session.get('user')
-    if not user:
+    mid = member_id()
+    if mid is None:
         flash('請先登入帳號以管理個人資料。', 'warning')
         return redirect(url_for('frontstage.login', next=url_for('frontstage.profile')))
+
+    try:
+        member_rows = fetch_rows(queries.GET_MEMBER_BY_ID, (mid,))
+        if not member_rows:
+            session.clear()
+            flash('會員資料不存在，請重新登入。', 'warning')
+            return redirect(url_for('frontstage.login'))
+        user = dict(member_rows[0])
+    except (Error, RuntimeError):
+        current_app.logger.exception('讀取個人資料失敗')
+        flash('暫時無法讀取會員資料，請稍後再試。', 'danger')
+        return render_template('profile.html', member=session.get('user')), 503
 
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
+        current_password = request.form.get('current_password', '')
         new_password = request.form.get('new_password', '').strip()
         confirm_new_password = request.form.get('confirm_new_password', '').strip()
 
-        if username and len(username) >= 3:
-            user['userName'] = username
-        if email and '@' in email:
-            user['email'] = email
+        if not username or len(username) < 3 or len(username) > 20:
+            flash('使用者名稱長度需介於 3 至 20 個字元！', 'danger')
+            return render_template('profile.html', member=user)
 
-        if new_password:
-            if new_password != confirm_new_password:
-                flash('兩次輸入的新密碼不相符！', 'danger')
+        if not email or '@' not in email:
+            flash('請輸入正確的電子郵件格式！', 'danger')
+            return render_template('profile.html', member=user)
+
+        try:
+            conflict = fetch_rows(queries.CHECK_MEMBER_CONFLICT, (email, username, mid))
+            if conflict:
+                flash('該使用者名稱或電子郵件已被其他會員使用！', 'danger')
                 return render_template('profile.html', member=user)
-            flash('基本資料與登入密碼已成功更新！', 'success')
-        else:
-            flash('個人基本資料已成功更新！', 'success')
 
-        session['user'] = user
-        session.modified = True
+            if new_password:
+                if not current_password:
+                    flash('欲變更密碼時，請輸入目前密碼以供驗證！', 'danger')
+                    return render_template('profile.html', member=user)
+                if len(new_password) < 8:
+                    flash('新密碼長度至少需 8 個字元！', 'danger')
+                    return render_template('profile.html', member=user)
+                if new_password != confirm_new_password:
+                    flash('兩次輸入的新密碼不相符！', 'danger')
+                    return render_template('profile.html', member=user)
 
-    user_favs = get_user_favorites()
-    fav_routes_count = len(user_favs.get('routes', []))
-    fav_stations_count = len(user_favs.get('stations', []))
+                pwd_check = fetch_rows(queries.VERIFY_MEMBER_PASSWORD, (mid, current_password))
+                if not pwd_check:
+                    flash('目前密碼輸入錯誤，無法更新！', 'danger')
+                    return render_template('profile.html', member=user)
+
+                updated = fetch_rows(queries.UPDATE_MEMBER_PROFILE_WITH_PASSWORD, (username, email, new_password, mid))
+                flash('個人資料與登入密碼已成功更新！', 'success')
+            else:
+                updated = fetch_rows(queries.UPDATE_MEMBER_PROFILE, (username, email, mid))
+                flash('個人基本資料已成功更新！', 'success')
+
+            if updated:
+                user = dict(updated[0])
+                session['user'] = user
+
+        except (Error, RuntimeError) as exc:
+            current_app.logger.exception('更新會員資料失敗: %s', exc)
+            flash('更新失敗，資料庫發生錯誤，請稍後再試。', 'danger')
+            return render_template('profile.html', member=user), 503
+
+    try:
+        route_count_row = fetch_rows(queries.COUNT_MEMBER_FAVORITE_ROUTES, (mid,))
+        station_count_row = fetch_rows(queries.COUNT_MEMBER_FAVORITE_STATIONS, (mid,))
+        fav_routes_count = route_count_row[0]['count'] if route_count_row else 0
+        fav_stations_count = station_count_row[0]['count'] if station_count_row else 0
+    except (Error, RuntimeError):
+        fav_routes_count, fav_stations_count = 0, 0
 
     return render_template(
         'profile.html',
