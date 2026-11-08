@@ -1,35 +1,10 @@
-// 同一使用者對同一項目只計一次；忽略已不存在的路線或站點。
-function favoriteRanking(items,favorites,idKey,nameKey){
-    const members=new Map(items.map(item=>[String(item[idKey]),new Set()]));
-    for(const row of favorites){
-        if(row&&row.mId!==undefined&&row.mId!==null&&String(row.mId)!=='')members.get(String(row[idKey]))?.add(String(row.mId));
-    }
-    return items.map(item=>({id:String(item[idKey]),name:item[nameKey],members:members.get(String(item[idKey])),count:members.get(String(item[idKey])).size}))
-        .sort((a,b)=>b.count-a.count||a.id.localeCompare(b.id));
-}
-
+// 所有統計由 API 執行 api/sql.py 的彙總查詢，不讀取示範 db。
+let analysisData=null,analysisLoading=false;
 function favoriteChart(rows,limit){
     const visible=rows.filter(r=>r.count>0).slice(0,limit);
     if(!visible.length)return '<div class="empty">目前尚無收藏資料。</div>';
     const max=visible[0].count;
     return '<div class="favorite-axis">依收藏人數排序 · 單位：人</div><ol class="favorite-ranking">'+visible.map((r,i)=>`<li class="favorite-row"><span class="favorite-rank">${i+1}</span><div class="favorite-detail"><strong>${esc(r.name)}</strong><small>${esc(r.id)}</small><div class="bar-track" role="img" aria-label="${esc(r.name)}：${r.count} 人收藏"><div class="bar" style="width:${r.count/max*100}%"></div></div></div><strong class="favorite-count">${r.count} 人</strong></li>`).join('')+'</ol>';
-}
-
-// 補齊沒有註冊的日期，避免圖表漏掉 0 人的日子。
-function registrationTrend(members,days,today=new Date()){
-    const key=date=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-    const end=new Date(today.getFullYear(),today.getMonth(),today.getDate());
-    const rows=Array.from({length:days},(_,i)=>{
-        const date=new Date(end);date.setDate(date.getDate()-days+1+i);
-        return {date:key(date),count:0};
-    });
-    const byDate=new Map(rows.map(row=>[row.date,row]));
-    const unique=new Map(members.filter(m=>m.mId!==undefined&&m.mId!==null&&!['admin',true,'true',1,'1'].includes(m.admin)).map(m=>[String(m.mId),m]));
-    for(const member of unique.values()){
-        const date=String(member.registerDatetime??'').slice(0,10);
-        if(byDate.has(date))byDate.get(date).count++;
-    }
-    return {rows,total:unique.size,added:rows.reduce((sum,row)=>sum+row.count,0)};
 }
 
 function registrationChart(rows){
@@ -45,19 +20,9 @@ function registrationChart(rows){
         </svg>`;
 }
 
-// 固定班表比較：不使用每日派車資料，也不受註冊日期篩選影響。
-function routeTripComparison(routes,trips){
-    return routes.map(route=>{
-        const routeTrips=trips.filter(t=>t.routeId===route.routeId);
-        const outbound=routeTrips.filter(t=>t.tDirection==='去程').length;
-        const inbound=routeTrips.filter(t=>t.tDirection==='返程').length;
-        return {id:route.routeId,name:route.routeName,outbound,inbound,total:outbound+inbound};
-    });
-}
-
 function renderTripComparison(){
     const order=el('trip-comparison-order').value;
-    const rows=routeTripComparison(db.routes,db.trips).sort((a,b)=>
+    const rows=analysisData.tripComparison.map(r=>({id:r.routeId,name:r.routeName,outbound:r.outboundCount,inbound:r.inboundCount,total:r.totalCount})).sort((a,b)=>
         (order==='most'?b.total-a.total:order==='least'?a.total-b.total:0)||a.id.localeCompare(b.id));
     if(!rows.length){
         el('trip-comparison-chart').innerHTML='<div class="empty">尚無路線資料，請先到路線管理新增路線。</div>';
@@ -73,12 +38,12 @@ function renderTripComparison(){
     el('trip-comparison-table').innerHTML='<table><thead><tr><th scope="col">路線</th><th scope="col">去程班次</th><th scope="col">返程班次</th><th scope="col">合計</th></tr></thead><tbody>'+rows.map(row=>`<tr><td>${esc(row.id)} · ${esc(row.name)}</td><td>${row.outbound}</td><td>${row.inbound}</td><td>${row.total}</td></tr>`).join('')+'</tbody></table>';
 }
 
-if(page==='analysis'){
-    el('section-name').textContent='ANALYSIS / 統計分析';
-    el('title').textContent='營運統計分析';
-    el('description').textContent='查看使用者註冊成長、各路線預定班次，以及熱門收藏路線與站點。';
+
+el('section-name').textContent='ANALYSIS / 統計分析';
+el('title').textContent='營運統計分析';
+el('description').textContent='查看使用者註冊成長、各路線預定班次，以及熱門收藏路線與站點。';
     el('content').innerHTML=`
-        <div class="toolbar"><label>使用者統計期間<select id="user-period"><option value="7">近 7 天</option><option value="30" selected>近 30 天</option><option value="90">近 90 天</option></select></label>
+        <div class="toolbar"><button id="analysis-reload" class="btn" type="button">重新載入</button><span id="analysis-status" class="count" role="status" aria-live="polite"></span></div><div class="toolbar"><label>使用者統計期間<select id="user-period"><option value="7">近 7 天</option><option value="30" selected>近 30 天</option><option value="90">近 90 天</option></select></label>
             <span class="count">含今天；使用者總數不受期間篩選影響，所有使用者統計皆排除管理者。</span></div>
         <div class="user-stat-cards" id="user-stats"></div>
         <section class="panel registration-panel"><h2>每日新增使用者</h2><p id="registration-range" class="count"></p>
@@ -94,33 +59,58 @@ if(page==='analysis'){
             <details class="registration-data"><summary>查看班次數據</summary><div class="table-wrap" id="trip-comparison-table"></div></details>
         </section>
         <div class="toolbar"><label>收藏排行<select id="rank-limit"><option value="5">前 5 名</option><option value="10">前 10 名</option><option value="all">全部</option></select></label>
-            <span class="count">收藏排行統計目前全部收藏，不受上方註冊期間影響；同一使用者對同一項目只計一次。</span></div>
+            <span class="count">收藏排行計全部有效收藏，包含管理者，不受註冊期間影響；同一使用者對同一項目只計一次。</span></div>
         <div class="favorite-charts"><section class="panel"><h2>熱門收藏路線</h2><div id="favorite-route-chart"></div></section>
             <section class="panel"><h2>熱門收藏站點</h2><div id="favorite-station-chart"></div></section></div>
-        <p class="favorite-note">此頁使用示範會員、預定班次與收藏資料，尚未串接正式註冊帳號。註冊統計以目前保留的會員資料計算；已刪除會員不計入。收藏人數相同時依編號排序。</p>`;
+        <p class="favorite-note">資料來自 PostgreSQL。註冊統計以目前保留的一般會員資料計算，已刪除會員不計入；日期按台北時間，依資料庫儲存的註冊日期統計。收藏人數相同時依編號排序。</p>`;
 
-    function renderUserAnalysis(){
-        const days=Number(el('user-period').value||30);
-        const trend=registrationTrend(db.members||[],days);
-        el('user-stats').innerHTML=cards([
-            ['使用者總數',trend.total,'目前一般會員總數，不含管理者'],
-            [`近 ${days} 天新增使用者`,trend.added,'依一般會員註冊日期計算，不含管理者']
-        ]);
-        el('registration-range').textContent=`${trend.rows[0].date} 至 ${trend.rows[trend.rows.length-1].date} · 單位：人`;
-        el('registration-chart').innerHTML=registrationChart(trend.rows);
-        el('registration-empty').textContent=trend.added?'':'此期間沒有新增使用者。';
-        el('registration-table').innerHTML='<table><thead><tr><th scope="col">註冊日期</th><th scope="col">新增人數</th></tr></thead><tbody>'+trend.rows.map(row=>`<tr><td>${row.date}</td><td>${row.count}</td></tr>`).join('')+'</tbody></table>';
-    }
 
-    function renderFavoriteAnalysis(){
-        const routes=favoriteRanking(db.routes,db.favoriteRoutes,'routeId','routeName');
-        const stations=favoriteRanking(db.stations,db.favoriteStations,'stationId','sName');
-        const limit=el('rank-limit').value==='all'?Infinity:Number(el('rank-limit').value||5);
-        el('favorite-route-chart').innerHTML=favoriteChart(routes,limit);
-        el('favorite-station-chart').innerHTML=favoriteChart(stations,limit);
-    }
-    el('user-period').onchange=renderUserAnalysis;
-    el('rank-limit').onchange=renderFavoriteAnalysis;
-    el('trip-comparison-order').onchange=renderTripComparison;
-    renderUserAnalysis();renderTripComparison();renderFavoriteAnalysis();
+function clearAnalysisCharts(){
+ for(const id of ['user-stats','registration-chart','registration-table','trip-comparison-chart','trip-comparison-table','favorite-route-chart','favorite-station-chart'])el(id).innerHTML='';
+ el('registration-range').textContent='';el('registration-empty').textContent='';
 }
+function renderUserAnalysis(){
+ const trend=analysisData.userGrowth,rows=trend.daily.map(r=>({date:r.registrationDate,count:r.newUserCount}));
+ el('user-stats').innerHTML=cards([
+  ['使用者總數',trend.userCount,'目前一般會員總數，不含管理者'],
+  [`近 ${trend.days} 天新增使用者`,trend.newUserCount,'依一般會員註冊日期計算，不含管理者']
+ ]);
+ el('registration-range').textContent=`${trend.startDate} 至 ${trend.endDate} · 台北時間 · 單位：人`;
+ el('registration-chart').innerHTML=registrationChart(rows);
+ el('registration-empty').textContent=trend.newUserCount?'':'此期間沒有新增使用者。';
+ el('registration-table').innerHTML='<table><thead><tr><th scope="col">註冊日期</th><th scope="col">新增人數</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${r.count}</td></tr>`).join('')+'</tbody></table>';
+}
+function renderFavoriteAnalysis(){
+ const routes=analysisData.favorites.routes.map(r=>({id:r.routeId,name:r.routeName,count:r.favoriteCount}));
+ const stations=analysisData.favorites.stations.map(r=>({id:r.stationId,name:r.sName,count:r.favoriteCount}));
+ el('favorite-route-chart').innerHTML=favoriteChart(routes,Infinity);
+ el('favorite-station-chart').innerHTML=favoriteChart(stations,Infinity);
+}
+const nonnegative=n=>Number.isSafeInteger(n)&&n>=0;
+function validAnalysis(data){
+ const g=data.userGrowth;
+ return g&&nonnegative(g.userCount)&&nonnegative(g.newUserCount)&&[7,30,90].includes(g.days)&&
+  /^\d{4}-\d{2}-\d{2}$/.test(g.startDate)&&/^\d{4}-\d{2}-\d{2}$/.test(g.endDate)&&Array.isArray(g.daily)&&g.daily.length===g.days&&g.daily.every(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.registrationDate)&&nonnegative(r.newUserCount))&&
+  g.daily.reduce((s,r)=>s+r.newUserCount,0)===g.newUserCount&&Array.isArray(data.tripComparison)&&data.tripComparison.every(r=>typeof r.routeId==='string'&&typeof r.routeName==='string'&&[r.outboundCount,r.inboundCount,r.totalCount].every(nonnegative)&&r.totalCount===r.outboundCount+r.inboundCount)&&
+  data.favorites&&data.favorites.scope==='all-valid-members'&&['routes','stations'].every(kind=>Array.isArray(data.favorites[kind])&&data.favorites[kind].every(r=>typeof r[kind==='routes'?'routeId':'stationId']==='string'&&typeof r[kind==='routes'?'routeName':'sName']==='string'&&nonnegative(r.favoriteCount)&&r.favoriteCount>0));
+}
+async function loadAnalysis(){
+ if(analysisLoading)return;analysisLoading=true;analysisData=null;clearAnalysisCharts();
+ for(const id of ['user-period','rank-limit','trip-comparison-order','analysis-reload'])el(id).disabled=true;
+ el('analysis-status').textContent='正在讀取資料庫統計…';el('analysis-status').setAttribute('role','status');
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+ try{
+  const params=new URLSearchParams({days:el('user-period').value,limit:el('rank-limit').value,order:el('trip-comparison-order').value});
+  const response=await fetch(`${analysisApiUrl}?${params}`,{signal:controller.signal,cache:'no-store',headers:{Accept:'application/json'}});
+  const data=await response.json();if(!response.ok||data.status!=='ok')throw new Error(data.message||'無法取得統計資料。');
+  if(!validAnalysis(data))throw new Error('統計資料格式不正確，請確認 API 回傳欄位與統計口徑。');
+  analysisData=data;renderUserAnalysis();renderTripComparison();renderFavoriteAnalysis();el('analysis-status').textContent='已載入 PostgreSQL 統計';
+ }catch(error){
+  clearAnalysisCharts();el('analysis-status').textContent=(error.name==='AbortError'||error instanceof TypeError||error instanceof SyntaxError)?'無法讀取統計，請確認 Flask 與資料庫連線後重新載入。':error.message;el('analysis-status').setAttribute('role','alert');
+ }finally{
+  clearTimeout(timer);analysisLoading=false;for(const id of ['user-period','rank-limit','trip-comparison-order','analysis-reload'])el(id).disabled=false;
+ }
+}
+el('user-period').onchange=loadAnalysis;el('rank-limit').onchange=loadAnalysis;
+el('trip-comparison-order').onchange=()=>{if(analysisData)renderTripComparison();};el('analysis-reload').onclick=loadAnalysis;
+loadAnalysis();

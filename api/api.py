@@ -76,3 +76,6 @@ api_bp.add_url_rule('/schedule/dispatch/options', endpoint='dispatch_options', v
 api_bp.add_url_rule('/schedule/dispatch', endpoint='create_dispatch', view_func=create_dispatch, methods=['POST'])
 api_bp.add_url_rule('/schedule/dispatch/<path:trip_id>/<dispatch_date>', endpoint='update_dispatch', view_func=update_dispatch, methods=['PATCH'])
 api_bp.add_url_rule('/schedule/dispatch/<path:trip_id>/<dispatch_date>', endpoint='delete_dispatch', view_func=delete_dispatch, methods=['DELETE'])
+
+from .analysis import operation_analysis
+api_bp.add_url_rule('/schedule/analysis', endpoint='operation_analysis', view_func=operation_analysis, methods=['GET'])
