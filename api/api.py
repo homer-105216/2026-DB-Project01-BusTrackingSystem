@@ -2,12 +2,19 @@ from flask import Blueprint, jsonify
 
 from link import get_connection
 from .routes import list_routes
+from .members import list_members, member_details, update_member, delete_member
 from .stations import list_stations, create_station, update_station, delete_station
 from .bus_types import list_bus_types, create_bus_type, update_bus_type, delete_bus_type
 
 # API Blueprint，網址前綴為 /api，一律回傳 JSON
 api_bp = Blueprint('api', __name__)
 api_bp.add_url_rule('/routes', endpoint='list_routes', view_func=list_routes, methods=['GET'])
+
+api_bp.add_url_rule('/members', endpoint='list_members', view_func=list_members, methods=['GET'])
+api_bp.add_url_rule('/members/<int:member_id>', endpoint='member_details', view_func=member_details, methods=['GET'])
+api_bp.add_url_rule('/members/<int:member_id>', endpoint='update_member', view_func=update_member, methods=['PATCH'])
+api_bp.add_url_rule('/members/<int:member_id>', endpoint='delete_member', view_func=delete_member, methods=['DELETE'])
+
 
 api_bp.add_url_rule('/stations', endpoint='list_stations', view_func=list_stations, methods=['GET'])
 api_bp.add_url_rule('/stations', endpoint='create_station', view_func=create_station, methods=['POST'])

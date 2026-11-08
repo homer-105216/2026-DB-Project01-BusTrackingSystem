@@ -8,5 +8,6 @@
 </dialog>
 {% endblock %}
 {% block page_scripts %}
+<script>const membersApiUrl = {{ url_for('api.list_members')|tojson }};</script>
 <script src="{{ url_for('static', filename='js/backstage/members.js') }}"></script>
 {% endblock %}
