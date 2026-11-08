@@ -63,3 +63,9 @@ api_bp.add_url_rule('/schedule/stops', endpoint='update_route_stop', view_func=u
 api_bp.add_url_rule('/schedule/stops', endpoint='delete_route_stop', view_func=delete_route_stop, methods=['DELETE'])
 api_bp.add_url_rule('/schedule/stop-times', endpoint='save_stop_time', view_func=save_stop_time, methods=['PUT'])
 api_bp.add_url_rule('/schedule/stop-times', endpoint='delete_stop_time', view_func=delete_stop_time, methods=['DELETE'])
+
+from .trips import list_trips, create_trip, update_trip, delete_trip
+api_bp.add_url_rule('/schedule/trips', endpoint='list_trips', view_func=list_trips, methods=['GET'])
+api_bp.add_url_rule('/schedule/trips', endpoint='create_trip', view_func=create_trip, methods=['POST'])
+api_bp.add_url_rule('/schedule/trips/<path:trip_id>', endpoint='update_trip', view_func=update_trip, methods=['PATCH'])
+api_bp.add_url_rule('/schedule/trips/<path:trip_id>', endpoint='delete_trip', view_func=delete_trip, methods=['DELETE'])

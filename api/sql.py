@@ -656,3 +656,14 @@ SELECT "routeId", "stationId", "rDirection"::text AS "rDirection", "stopSequence
 FROM public."Contain" WHERE "routeId" = %(routeId)s AND "stationId" = %(stationId)s
 AND "rDirection"::text = %(rDirection)s
 """
+
+# --- 預定班次 API：存在性與交易協調 ---------------------------------------
+# Input tId:str；Output 原 Trip（時間字串 HH:MM:SS，可含小數秒）；0 筆代表不存在。
+BACKSTAGE_GET_TRIP = """
+SELECT "tId", "routeId", "departureTime"::text AS "departureTime",
+       "tDirection"::text AS "tDirection"
+FROM public."Trip" WHERE "tId" = %(tId)s
+"""
+# 無參數／無資料回傳。寫入交易最先取得，與站序交易同序鎖 Trip/Contain/Run；
+# 同時協調每日派車，避免檢查無引用後有新派車並行寫入。需 commit/rollback 釋放。
+BACKSTAGE_LOCK_TRIPS = 'LOCK TABLE public."Trip", public."Contain", public."Run", public."Daily_Trip_Implement" IN SHARE ROW EXCLUSIVE MODE'
