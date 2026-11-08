@@ -129,8 +129,8 @@ body {
     border: 1px solid #bfdbfe;
 }
 
-/* 路線卡片 (微圓角) */
-.route-card {
+/* 路線與站點卡片 (微圓角外框) */
+.route-card, .nearby-station-card {
     border: 1px solid #e2e8f0;
     border-radius: 4px;
     box-shadow: var(--card-shadow);
@@ -138,7 +138,7 @@ body {
     background: #ffffff;
 }
 
-.route-card:hover {
+.route-card:hover, .nearby-station-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--card-shadow-hover);
     border-color: #93c5fd;

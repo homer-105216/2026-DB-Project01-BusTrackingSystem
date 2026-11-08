@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 
+from api import sql as queries
 from link import get_connection
 from .routes import list_routes, create_route, update_route, delete_route
 from .buses import list_buses, create_bus, update_bus, delete_bus
@@ -42,7 +43,7 @@ def health():
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute('SELECT current_database(), version();')
+                cur.execute(queries.DATABASE_HEALTH)
                 database, version = cur.fetchone()
         finally:
             conn.close()
