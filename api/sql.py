@@ -667,3 +667,12 @@ FROM public."Trip" WHERE "tId" = %(tId)s
 # 無參數／無資料回傳。寫入交易最先取得，與站序交易同序鎖 Trip/Contain/Run；
 # 同時協調每日派車，避免檢查無引用後有新派車並行寫入。需 commit/rollback 釋放。
 BACKSTAGE_LOCK_TRIPS = 'LOCK TABLE public."Trip", public."Contain", public."Run", public."Daily_Trip_Implement" IN SHARE ROW EXCLUSIVE MODE'
+
+# --- 每日派車 API：編輯／刪除前識別原紀錄 ---------------------------------
+# Input tId:str, date:date（YYYY-MM-DD）；Output 原安排，不變更複合主鍵。
+# 在 BACKSTAGE_LOCK_TRIPS 的同一寫入交易中執行；0 筆 -> 404。
+BACKSTAGE_GET_DISPATCH = """
+SELECT "tId", "date", "bId", "driver", "status"
+FROM public."Daily_Trip_Implement" WHERE "tId" = %(tId)s AND "date" = %(date)s::date
+FOR UPDATE
+"""

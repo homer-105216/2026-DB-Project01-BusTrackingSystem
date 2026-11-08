@@ -69,3 +69,10 @@ api_bp.add_url_rule('/schedule/trips', endpoint='list_trips', view_func=list_tri
 api_bp.add_url_rule('/schedule/trips', endpoint='create_trip', view_func=create_trip, methods=['POST'])
 api_bp.add_url_rule('/schedule/trips/<path:trip_id>', endpoint='update_trip', view_func=update_trip, methods=['PATCH'])
 api_bp.add_url_rule('/schedule/trips/<path:trip_id>', endpoint='delete_trip', view_func=delete_trip, methods=['DELETE'])
+
+from .dispatch import list_dispatches, dispatch_options, create_dispatch, update_dispatch, delete_dispatch
+api_bp.add_url_rule('/schedule/dispatch', endpoint='list_dispatches', view_func=list_dispatches, methods=['GET'])
+api_bp.add_url_rule('/schedule/dispatch/options', endpoint='dispatch_options', view_func=dispatch_options, methods=['GET'])
+api_bp.add_url_rule('/schedule/dispatch', endpoint='create_dispatch', view_func=create_dispatch, methods=['POST'])
+api_bp.add_url_rule('/schedule/dispatch/<path:trip_id>/<dispatch_date>', endpoint='update_dispatch', view_func=update_dispatch, methods=['PATCH'])
+api_bp.add_url_rule('/schedule/dispatch/<path:trip_id>/<dispatch_date>', endpoint='delete_dispatch', view_func=delete_dispatch, methods=['DELETE'])
