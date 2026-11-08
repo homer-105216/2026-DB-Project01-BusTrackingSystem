@@ -1,9 +1,11 @@
 from flask import Blueprint, jsonify
 
 from link import get_connection
+from .routes import list_routes
 
 # API Blueprint，網址前綴為 /api，一律回傳 JSON
 api_bp = Blueprint('api', __name__)
+api_bp.add_url_rule('/routes', endpoint='list_routes', view_func=list_routes, methods=['GET'])
 
 
 @api_bp.route('/health')
