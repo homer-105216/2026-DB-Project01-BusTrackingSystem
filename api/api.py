@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 
 from link import get_connection
 from .routes import list_routes
+from .buses import list_buses, create_bus, update_bus, delete_bus
 from .members import list_members, member_details, update_member, delete_member
 from .stations import list_stations, create_station, update_station, delete_station
 from .bus_types import list_bus_types, create_bus_type, update_bus_type, delete_bus_type
@@ -28,6 +29,11 @@ api_bp.add_url_rule('/bus-types/<path:bus_type>', endpoint='update_bus_type', vi
 api_bp.add_url_rule('/bus-types/<path:bus_type>', endpoint='delete_bus_type', view_func=delete_bus_type, methods=['DELETE'])
 
 
+
+api_bp.add_url_rule('/buses', endpoint='list_buses', view_func=list_buses, methods=['GET'])
+api_bp.add_url_rule('/buses', endpoint='create_bus', view_func=create_bus, methods=['POST'])
+api_bp.add_url_rule('/buses/<path:bus_id>', endpoint='update_bus', view_func=update_bus, methods=['PATCH'])
+api_bp.add_url_rule('/buses/<path:bus_id>', endpoint='delete_bus', view_func=delete_bus, methods=['DELETE'])
 
 @api_bp.route('/health')
 def health():
