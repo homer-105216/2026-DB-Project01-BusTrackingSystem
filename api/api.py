@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 
 from link import get_connection
-from .routes import list_routes
+from .routes import list_routes, create_route, update_route, delete_route
 from .buses import list_buses, create_bus, update_bus, delete_bus
 from .members import list_members, member_details, update_member, delete_member
 from .stations import list_stations, create_station, update_station, delete_station
@@ -49,3 +49,7 @@ def health():
         return jsonify(status='ok', database=database, version=version)
     except Exception as e:
         return jsonify(status='error', message=str(e)), 500
+
+api_bp.add_url_rule('/routes', endpoint='create_route', view_func=create_route, methods=['POST'])
+api_bp.add_url_rule('/routes/<path:route_id>', endpoint='update_route', view_func=update_route, methods=['PATCH'])
+api_bp.add_url_rule('/routes/<path:route_id>', endpoint='delete_route', view_func=delete_route, methods=['DELETE'])
