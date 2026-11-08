@@ -271,7 +271,7 @@ COPY_TABLE_ROWS = 'COPY public.{table} ({columns}) FROM STDIN WITH (FORMAT CSV, 
 # 實際角色 enum: user / admin；rDirection、tDirection: 去程 / 回程。
 # UI 的「返程」須由 API 映射為「回程」，SQL 保留資料庫原值。
 # 所有 ID 目前均手動提供；Member.mId 為 int，非畫面示範的 M001。
-# 管理者登入暫不啟用；本區不新增或回傳 password。
+# 管理者登入透過檔案末的專用查詢驗證；API 不回傳 password。
 # ============================================================================
 
 # --- CMS: 一般會員 -----------------------------------------------------------
@@ -814,4 +814,22 @@ SELECT (SELECT count(*) FROM public."Route") AS "routeCount",
        (SELECT count(*) FROM public."Bus") AS "busCount",
        (SELECT count(*) FROM public."Bus_Type") AS "busTypeCount",
        (SELECT count(*) FROM public."Trip") AS "tripCount"
+"""
+
+# --- 後台管理者登入與每次請求的權限確認 -----------------------------------
+# Input identifier:str（名稱或 Email）, password:str；與現有前台密碼儲存方式一致。
+# Output mId:int, userName:str, admin:text；不回傳密碼。0 筆拒絕，>1 筆歧義拒絕。
+BACKSTAGE_VERIFY_ADMIN = """
+SELECT "mId", "userName", "admin"::text AS "admin"
+FROM public."Member"
+WHERE "admin"::text = 'admin'
+  AND (lower("email") = lower(%(identifier)s) OR "userName" = %(identifier)s)
+  AND "password" = %(password)s
+LIMIT 2
+"""
+# Input mId:int；Output 目前仍具管理者權限的公開識別，0 筆表示已刪除／降權。
+# 登入後每個後台頁面／API 請求重新確認，不信任前台 session 的角色字串。
+BACKSTAGE_GET_ADMIN = """
+SELECT "mId", "userName", "admin"::text AS "admin"
+FROM public."Member" WHERE "mId" = %(mId)s AND "admin"::text = 'admin'
 """

@@ -10,6 +10,16 @@ from .bus_types import list_bus_types, create_bus_type, update_bus_type, delete_
 
 # API Blueprint，網址前綴為 /api，一律回傳 JSON
 api_bp = Blueprint('api', __name__)
+
+# 本 Blueprint 除 health 外皆為後台管理 API。乘客 API 位於 frontstage Blueprint。
+from .admin_auth import guard_admin_api
+api_bp.before_request(guard_admin_api)
+
+@api_bp.after_request
+def prevent_admin_api_cache(response):
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
 api_bp.add_url_rule('/routes', endpoint='list_routes', view_func=list_routes, methods=['GET'])
 
 api_bp.add_url_rule('/members', endpoint='list_members', view_func=list_members, methods=['GET'])
