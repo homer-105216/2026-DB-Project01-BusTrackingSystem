@@ -40,9 +40,9 @@ function renderMembers() {
     const rows = realMembers.filter(member => [member.mId, member.userName, member.email].some(value =>
         String(value).toLowerCase().includes(memberQuery.toLowerCase())));
     el('member-table').innerHTML = `<table><thead><tr><th scope="col">會員編號</th><th scope="col">會員名稱</th><th scope="col">Email</th>
-        <th scope="col">註冊時間</th><th scope="col">角色</th><th scope="col">操作</th></tr></thead><tbody>
+        <th scope="col">註冊時間</th><th scope="col">操作</th></tr></thead><tbody>
         ${rows.map(member => `<tr><td>${esc(member.mId)}</td><td>${esc(member.userName)}</td><td>${esc(member.email)}</td>
-        <td>${esc(member.registerDatetime)}</td><td><span class="pill">一般會員</span></td><td>
+        <td>${esc(member.registerDatetime)}</td><td>
             <button data-member-view="${member.mId}" ${memberWriting ? 'disabled' : ''}>查看</button>
             <button data-member-edit="${member.mId}" ${memberWriting ? 'disabled' : ''}>編輯</button>
             <button class="danger" data-member-delete="${member.mId}" ${memberWriting ? 'disabled' : ''}>刪除</button></td></tr>`).join('')}
@@ -80,7 +80,7 @@ async function showMember(member) {
         el('member-detail-body').innerHTML = `<dl class="member-details-list">
             <dt>會員編號</dt><dd>${esc(m.mId)}</dd><dt>會員名稱</dt><dd>${esc(m.userName)}</dd>
             <dt>Email</dt><dd>${esc(m.email)}</dd><dt>註冊時間</dt><dd>${esc(m.registerDatetime)}</dd>
-            <dt>角色</dt><dd>一般會員</dd></dl>
+            </dl>
             <h2 class="member-subtitle">收藏路線（${routes.length}）</h2>
             ${routes.length ? '<ul class="member-favorites">' + routes.map(r => `<li>${esc(r.routeId)} · ${esc(r.routeName)}</li>`).join('') + '</ul>' : '<p>尚無收藏路線。</p>'}
             <h2 class="member-subtitle">收藏站點（${stations.length}）</h2>
@@ -95,8 +95,7 @@ function editMember(member) {
     el('fields').innerHTML = `<label>會員編號<input class="member-readonly" value="${member.mId}" readonly></label>
         <label>會員名稱<input name="userName" value="${esc(member.userName)}" maxlength="50" required></label>
         <label>Email<input type="email" name="email" value="${esc(member.email)}" maxlength="100" required></label>
-        <label>註冊時間<input class="member-readonly" value="${esc(member.registerDatetime)}" readonly></label>
-        <label>角色<input class="member-readonly" value="一般會員" readonly></label>`;
+        <label>註冊時間<input class="member-readonly" value="${esc(member.registerDatetime)}" readonly></label>`;
     el('editor').showModal();
 }
 
