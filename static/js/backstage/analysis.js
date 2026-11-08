@@ -24,7 +24,7 @@ function registrationTrend(members,days,today=new Date()){
         return {date:key(date),count:0};
     });
     const byDate=new Map(rows.map(row=>[row.date,row]));
-    const unique=new Map(members.filter(m=>m.mId!==undefined&&m.mId!==null&&![true,'true',1,'1'].includes(m.admin)).map(m=>[String(m.mId),m]));
+    const unique=new Map(members.filter(m=>m.mId!==undefined&&m.mId!==null&&!['admin',true,'true',1,'1'].includes(m.admin)).map(m=>[String(m.mId),m]));
     for(const member of unique.values()){
         const date=String(member.registerDatetime??'').slice(0,10);
         if(byDate.has(date))byDate.get(date).count++;
