@@ -53,3 +53,13 @@ def health():
 api_bp.add_url_rule('/routes', endpoint='create_route', view_func=create_route, methods=['POST'])
 api_bp.add_url_rule('/routes/<path:route_id>', endpoint='update_route', view_func=update_route, methods=['PATCH'])
 api_bp.add_url_rule('/routes/<path:route_id>', endpoint='delete_route', view_func=delete_route, methods=['DELETE'])
+
+from .schedule_stops import (stop_options, route_stops, create_route_stop,
+                             update_route_stop, delete_route_stop, save_stop_time, delete_stop_time)
+api_bp.add_url_rule('/schedule/options', endpoint='stop_options', view_func=stop_options, methods=['GET'])
+api_bp.add_url_rule('/schedule/stops', endpoint='route_stops', view_func=route_stops, methods=['GET'])
+api_bp.add_url_rule('/schedule/stops', endpoint='create_route_stop', view_func=create_route_stop, methods=['POST'])
+api_bp.add_url_rule('/schedule/stops', endpoint='update_route_stop', view_func=update_route_stop, methods=['PATCH'])
+api_bp.add_url_rule('/schedule/stops', endpoint='delete_route_stop', view_func=delete_route_stop, methods=['DELETE'])
+api_bp.add_url_rule('/schedule/stop-times', endpoint='save_stop_time', view_func=save_stop_time, methods=['PUT'])
+api_bp.add_url_rule('/schedule/stop-times', endpoint='delete_stop_time', view_func=delete_stop_time, methods=['DELETE'])

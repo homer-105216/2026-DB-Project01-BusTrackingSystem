@@ -642,3 +642,17 @@ WHERE NOT %(onlyUsers)s::boolean OR m."admin"::text = 'user'
 GROUP BY s."stationId", s."sName"
 ORDER BY "favoriteCount" DESC, s."stationId" LIMIT %(limit)s
 """
+
+# --- 站序頁 API 的單筆識別查詢（不異動資料） -------------------------------
+# Input routeId:str。Output routeId, routeName, origin, destination；0 筆為不存在。
+BACKSTAGE_GET_ROUTE = """
+SELECT "routeId", "routeName", "origin", "destination"
+FROM public."Route" WHERE "routeId" = %(routeId)s
+"""
+# Input routeId, stationId, rDirection（去程/回程）。Output 完整 Contain；0 筆不存在。
+# 寫入前須先取得 BACKSTAGE_LOCK_SCHEDULE，在同一交易判斷 404 與受 Run 限制的 409。
+BACKSTAGE_GET_ROUTE_STOP = """
+SELECT "routeId", "stationId", "rDirection"::text AS "rDirection", "stopSequence"
+FROM public."Contain" WHERE "routeId" = %(routeId)s AND "stationId" = %(stationId)s
+AND "rDirection"::text = %(rDirection)s
+"""
