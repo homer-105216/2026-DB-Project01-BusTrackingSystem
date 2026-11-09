@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+#ngork
+ngrok.yml
+tp.yml
+
