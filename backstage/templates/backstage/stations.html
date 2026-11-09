@@ -1,0 +1,5 @@
+{% extends 'backstage/layout.html' %}
+{% block page_scripts %}
+<script>const stationsApiUrl = {{ url_for('api.list_stations')|tojson }};</script>
+<script src="{{ url_for('static', filename='js/backstage/stations.js') }}"></script>
+{% endblock %}

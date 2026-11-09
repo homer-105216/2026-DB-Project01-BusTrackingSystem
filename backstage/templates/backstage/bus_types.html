@@ -1,0 +1,5 @@
+{% extends 'backstage/layout.html' %}
+{% block page_scripts %}
+<script>const busTypesApiUrl = {{ url_for('api.list_bus_types')|tojson }};</script>
+<script src="{{ url_for('static', filename='js/backstage/bus_types.js') }}"></script>
+{% endblock %}

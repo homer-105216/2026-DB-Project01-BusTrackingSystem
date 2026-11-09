@@ -1,0 +1,5 @@
+{% extends 'backstage/layout.html' %}
+{% block page_scripts %}
+<script>const dispatchApiUrl={{ url_for('api.list_dispatches')|tojson }}, dispatchOptionsUrl={{ url_for('api.dispatch_options')|tojson }};</script>
+<script src="{{ url_for('static', filename='js/backstage/dispatch.js') }}"></script>
+{% endblock %}
