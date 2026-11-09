@@ -20,7 +20,7 @@
             <div class="d-flex align-items-center gap-3">
                 <span class="route-number-badge fs-2 px-3 py-2">{{ route.routeName.split(' ')[0] if ' ' in route.routeName else route.routeName }}</span>
                 <div>
-                    <h3 class="fw-bold mb-1 text-dark d-flex align-items-center flex-wrap gap-2">
+                    <h3 class="fw-bold mb-0 text-dark d-flex align-items-center flex-wrap gap-2">
                         <span>{{ route.routeName }}</span>
                         <span class="text-secondary fs-5 fw-normal">
                             ({{ route.origin }}
@@ -28,15 +28,6 @@
                             {{ route.destination }})
                         </span>
                     </h3>
-                    <div class="d-flex flex-wrap align-items-center gap-2 text-secondary small">
-                        <span>路線編號：<code>{{ route.routeId }}</code></span>
-                        <span>•</span>
-                        <span>營運業者：<strong class="text-dark">{{ route.operator or '高雄市公車' }}</strong></span>
-                        <span>•</span>
-                        <span>班距：{{ route.headway or '尖峰 10-15 分 / 離峰 15-20 分' }}</span>
-                        <span>•</span>
-                        <span>票價計費：<strong class="text-dark">{{ route.fare or '一段票 12 元' }}</strong></span>
-                    </div>
                 </div>
             </div>
 
