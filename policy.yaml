@@ -1,0 +1,6 @@
+on_http_request:
+  - actions:
+    - type: basic-auth
+      config:
+        credentials:
+          - "admin:1gasd8235das8d434584dwd"

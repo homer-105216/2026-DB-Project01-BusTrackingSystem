@@ -35,10 +35,6 @@ def update_position():
             return 'T0001 最新班次缺少位置紀錄'
 
         service_date, previous, departure = latest
-        timestamp = previous + STEP
-        if timestamp.date() != service_date:
-            return 'T0001 回放時間已到班次日期的午夜'
-
         cur.execute(queries.REPLAY_STOPS, (TRIP_ID,))
         rows = cur.fetchall()
         if not rows:
@@ -47,7 +43,17 @@ def update_position():
         first_arrival = rows[0][0]
         stops = [((arrival - first_arrival).total_seconds(), float(lat), float(lon))
                  for arrival, lat, lon in rows]
-        elapsed = (timestamp - datetime.combine(service_date, departure)).total_seconds()
+        start = datetime.combine(service_date, departure)
+        end = start + timedelta(seconds=max(stops[-1][0] - stops[0][0], 0))
+
+        timestamp = previous + STEP
+        if not start <= timestamp < end:
+            # 跑完一趟（或時間不在班次範圍內）就回到發車時間重新循環，
+            # 模擬時鐘永遠停在班次時間內，不會再跑到午夜而停止寫入。
+            timestamp = start
+            # 模擬只維護一筆位置紀錄；回到發車時間前先清掉同日其他舊紀錄，避免主鍵重複。
+            cur.execute(queries.REPLAY_CLEAR_OTHER_LOCATIONS, (TRIP_ID, service_date, previous))
+        elapsed = (timestamp - start).total_seconds()
         latitude, longitude = position_at(stops, elapsed)
 
         cur.execute(queries.UPDATE_TRIP_LOCATION, (timestamp, latitude, longitude, TRIP_ID, service_date, previous))

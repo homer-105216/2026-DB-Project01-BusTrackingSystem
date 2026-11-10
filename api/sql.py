@@ -249,6 +249,11 @@ SET "recordDatetime" = %s, "lLatitude" = %s, "lLongitude" = %s
 WHERE "tId" = %s AND "date" = %s AND "recordDatetime" = %s
 """
 
+REPLAY_CLEAR_OTHER_LOCATIONS = """
+DELETE FROM public."Location_Log"
+WHERE "tId" = %s AND "date" = %s AND "recordDatetime" <> %s
+"""
+
 # database/bus_data.py
 
 PUBLIC_SEARCH_PATH = 'SET LOCAL search_path TO public'
