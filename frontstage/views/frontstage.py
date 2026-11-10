@@ -6,6 +6,7 @@ from psycopg2 import Error, sql
 from psycopg2.extras import RealDictCursor
 
 from api import sql as queries
+from database.location_replay import TRIP_ID as REPLAY_TRIP_ID
 from link import get_connection
 
 # 前台 Blueprint，網址前綴為 /
@@ -106,7 +107,7 @@ def route_detail(route_id):
         route = route_rows[0]
         stations = fetch_rows(queries.LIST_ROUTE_STOPS, (route_id, direction_str))
         trips = fetch_rows(queries.LIST_ROUTE_TRIPS, (route_id, direction_str))
-        buses = fetch_rows(queries.LIST_ROUTE_LIVE_BUSES, (route_id, direction_str))
+        buses = fetch_rows(queries.LIST_ROUTE_LIVE_BUSES, (route_id, direction_str, REPLAY_TRIP_ID))
         routes = get_routes()
         favorites = get_user_favorites()
     except (Error, RuntimeError):
@@ -125,7 +126,7 @@ def api_route_live(route_id):
     direction = int(request.args.get('direction', type=int) == 1)
     direction_str = '回程' if direction else '去程'
     try:
-        buses = fetch_rows(queries.LIST_ROUTE_LIVE_BUSES, (route_id, direction_str))
+        buses = fetch_rows(queries.LIST_ROUTE_LIVE_BUSES, (route_id, direction_str, REPLAY_TRIP_ID))
         return jsonify(success=True, buses=buses)
     except (Error, RuntimeError):
         current_app.logger.exception('即時公車動態查詢失敗')

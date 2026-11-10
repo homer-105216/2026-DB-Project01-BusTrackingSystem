@@ -203,6 +203,14 @@ WHERE t."routeId" = %s AND t."tDirection" = %s
   AND d."date" = (
       SELECT max("date") FROM public."Daily_Trip_Implement" WHERE "tId" = t."tId"
   )
+  -- 只顯示行駛中的班次：即時位置模擬中的班次（location_replay.TRIP_ID），
+  -- 或最新位置時間早於預定抵達終點時間；已抵達終點的班次不顯示
+  AND (
+      t."tId" = %s
+      OR l."recordDatetime"::time < (
+          SELECT max(r."expArrivalTime")::time FROM public."Run" r WHERE r."tId" = t."tId"
+      )
+  )
 ORDER BY l."recordDatetime" DESC
 """
 
